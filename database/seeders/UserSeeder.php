@@ -53,22 +53,26 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($data as [$nip, $nama, $email, $role, $jabatan]) {
-            $user = User::updateOrCreate(
-                ['nip' => $nip],
-                [
-                    'name'     => $nama,
-                    'email'    => $email,
-                    'role'     => $role,
-                    'jabatan'  => $jabatan,
-                    'aktif'    => true,
-                ],
-            );
+            $adaSebelumnya = User::where('nip', $nip)->exists();
 
-            // Sandi hanya diisi saat pembuatan; seed ulang tidak menimpa sandi
-            // yang mungkin sudah diganti admin lewat panel.
-            if (! $user->password) {
-                $user->forceFill(['password' => Hash::make(self::SANDI_AWAL)])->save();
+            $atribut = [
+                'name'    => $nama,
+                'email'   => $email,
+                'role'    => $role,
+                'jabatan' => $jabatan,
+                'aktif'   => true,
+            ];
+
+            // Sandi disertakan pada payload baris baru, bukan diisi sesudahnya.
+            // users.password berstatus NOT NULL, jadi menyimpan dulu lalu
+            // menambal sandi membuat INSERT pertama gagal sebelum ada baris
+            // untuk ditambal. Pada baris yang sudah ada, sandi tidak disentuh
+            // supaya seed ulang tidak menimpa sandi yang diganti admin.
+            if (! $adaSebelumnya) {
+                $atribut['password'] = Hash::make(self::SANDI_AWAL);
             }
+
+            $user = User::updateOrCreate(['nip' => $nip], $atribut);
 
             // division_id opsional: kolom ini belum tentu ada di tabel users.
             if ($user->isFillable('division_id') && isset($divisiPeran[$role])) {
