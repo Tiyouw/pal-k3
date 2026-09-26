@@ -146,7 +146,10 @@ class InspectionResource extends Resource
                     ->label('Kesimpulan')
                     ->badge()
                     ->formatStateUsing(fn (Inspection $r) => $r->labelKesimpulan())
-                    ->color(fn (?string $s) => match ($s) {
+                    // Nama parameter WAJIB $state: Filament menyuntik argumen
+                    // closure berdasarkan nama, bukan urutan. Parameter bertipe
+                    // model (Inspection $r) aman karena diresolusi lewat tipe.
+                    ->color(fn (?string $state) => match ($state) {
                         'layak'         => 'success',
                         'layak_catatan' => 'warning',
                         'tidak_layak'   => 'danger',

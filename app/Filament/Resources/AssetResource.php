@@ -163,7 +163,10 @@ class AssetResource extends Resource
                     ->tooltip(fn (Asset $r) => $r->lokasi_teks),
                 Tables\Columns\TextColumn::make('lokasi_tipe')
                     ->label('Jenis')
-                    ->formatStateUsing(fn (?string $s) => Asset::LABEL_LOKASI[$s] ?? '-')
+                    // Nama parameter closure WAJIB $state: Filament menyuntik
+                    // argumen berdasarkan nama, bukan urutan. Nama lain gagal
+                    // dengan BindingResolutionException saat tabel dirender.
+                    ->formatStateUsing(fn (?string $state) => Asset::LABEL_LOKASI[$state] ?? '-')
                     ->toggleable(),
                 // Radius efektif, bukan kolom mentah: kolom mentah sering kosong
                 // karena ia override, dan kosong terbaca keliru sebagai "belum diatur".
