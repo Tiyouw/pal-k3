@@ -8,11 +8,12 @@ use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'nip', 'email', 'role', 'jabatan', 'aktif', 'password'])]
+#[Fillable(['name', 'nip', 'email', 'role', 'jabatan', 'division_id', 'aktif', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -62,6 +63,15 @@ class User extends Authenticatable implements FilamentUser
     public function inspections(): HasMany
     {
         return $this->hasMany(Inspection::class);
+    }
+
+    /**
+     * Divisi penempatan petugas. Dipakai pada blok tanda tangan laporan
+     * bulanan PMS, yang ditandatangani per divisi.
+     */
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
     }
 
     public function isAdmin(): bool

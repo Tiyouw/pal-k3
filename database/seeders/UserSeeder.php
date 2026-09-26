@@ -6,6 +6,7 @@ use App\Models\Division;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Bagian 13 rancangan: sembilan petugas untuk data awal pengembangan.
@@ -52,6 +53,8 @@ class UserSeeder extends Seeder
             'pemantau'  => $ti?->id,
         ];
 
+        $kolomDivisiAda = Schema::hasColumn('users', 'division_id');
+
         foreach ($data as [$nip, $nama, $email, $role, $jabatan]) {
             $adaSebelumnya = User::where('nip', $nip)->exists();
 
@@ -74,8 +77,11 @@ class UserSeeder extends Seeder
 
             $user = User::updateOrCreate(['nip' => $nip], $atribut);
 
-            // division_id opsional: kolom ini belum tentu ada di tabel users.
-            if ($user->isFillable('division_id') && isset($divisiPeran[$role])) {
+            // Divisi ditetapkan hanya bila kolomnya benar-benar ada di tabel.
+            // isFillable() memeriksa daftar atribut model, bukan skema, sehingga
+            // penjaga lama tetap lolos pada basis data yang belum punya kolom
+            // ini dan gagal dengan "no such column: division_id".
+            if ($kolomDivisiAda && isset($divisiPeran[$role])) {
                 $user->update(['division_id' => $divisiPeran[$role]]);
             }
         }
