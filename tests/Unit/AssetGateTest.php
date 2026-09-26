@@ -76,10 +76,13 @@ class AssetGateTest extends TestCase
     public static function kasusGerbang(): array
     {
         return [
-            'di titik, akurasi bagus'     => ['lolos',        self::LAT,           self::LNG,            8],
-            'geser 10 m'                  => ['lolos',        self::LAT,           self::LNG + 0.00009,  8],
-            'geser 50 m masih dalam area' => ['lolos',        self::LAT - 0.00045, self::LNG,            10],
-            'jauh 200 m'                  => ['perlu_review', self::LAT - 0.0018,  self::LNG,            10],
+            // Istilah status mengikuti Asset::evaluasiGerbang(): 'sesuai', bukan
+            // 'lolos'. Nama lama sempat terpakai saat kolom masih enum.
+            'di titik, akurasi bagus'     => ['sesuai',       self::LAT,           self::LNG,            8],
+            'geser 10 m'                  => ['sesuai',       self::LAT,           self::LNG + 0.00009,  8],
+            'geser 50 m masih dalam area' => ['sesuai',       self::LAT - 0.00045, self::LNG,            10],
+            // 200 m dengan radius 75 m melewati dua kali radius, jadi 'jauh'.
+            'jauh 200 m'                  => ['jauh',         self::LAT - 0.0018,  self::LNG,            10],
             'akurasi lemah dalam beton'   => ['gps_lemah',    self::LAT,           self::LNG,            120],
             'tanpa GPS'                   => ['tanpa_gps',    null,                null,                 null],
         ];
@@ -105,7 +108,7 @@ class AssetGateTest extends TestCase
         $lat = self::LAT - 0.00036;
 
         $this->assertSame('perlu_review', $aset->evaluasiGerbang($lat, self::LNG, 1)['status']);
-        $this->assertSame('lolos',        $aset->evaluasiGerbang($lat, self::LNG, 20)['status']);
+        $this->assertSame('sesuai',       $aset->evaluasiGerbang($lat, self::LNG, 20)['status']);
     }
 
     #[Test]

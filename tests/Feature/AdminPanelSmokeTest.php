@@ -150,11 +150,11 @@ class AdminPanelSmokeTest extends TestCase
     }
 
     #[Test]
-    public function supervisor_boleh_masuk_panel_admin(): void
+    public function pemantau_boleh_masuk_panel_admin(): void
     {
-        $supervisor = User::factory()->supervisor()->create();
+        $pemantau = User::factory()->pemantau()->create();
 
-        $this->actingAs($supervisor)->get('/admin')->assertOk();
+        $this->actingAs($pemantau)->get('/admin')->assertOk();
     }
 
     /** Petugas yang sudah tidak aktif tidak boleh masuk walau perannya admin. */

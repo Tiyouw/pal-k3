@@ -16,7 +16,7 @@ class UserFactory extends Factory
 
     /**
      * Default sengaja inspektur: peran paling kecil haknya.
-     * Tes yang butuh panel admin harus menyatakannya lewat state admin() atau supervisor(),
+     * Tes yang butuh panel admin harus menyatakannya lewat state admin() atau pemantau(),
      * supaya hak akses tidak pernah kebetulan lolos.
      */
     public function definition(): array
@@ -42,10 +42,15 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function supervisor(): static
+    /**
+     * Peran kanonik hanya admin / pemantau / inspektur. Supervisor bukan peran
+     * sistem: ia jabatan penanda tangan pada laporan PMS, dan hak aksesnya sama
+     * dengan pemantau (lihat papan pantau dan laporan, tidak mengubah data induk).
+     */
+    public function pemantau(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role'    => User::ROLE_SUPERVISOR,
+            'role'    => User::ROLE_PEMANTAU,
             'jabatan' => 'Supervisor K3LH',
         ]);
     }

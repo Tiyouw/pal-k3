@@ -194,13 +194,30 @@ class Asset extends Model
             return ['status' => 'gps_lemah', 'jarak_m' => $jarak, 'radius_m' => $radius];
         }
 
+        /*
+         * Akurasi yang dilaporkan peramban adalah jari-jari ketidakpastian, jadi
+         * ia ditambahkan ke ambang, bukan diabaikan. Bacaan 40 m dengan akurasi
+         * 20 m berarti posisi sebenarnya ada di antara 20 m dan 60 m: menyebutnya
+         * menyimpang berarti menghukum inspektur atas keterbatasan alat.
+         *
+         * Akurasi di atas AKURASI_LEMAH_M sudah dipagari di atas, sehingga
+         * pelebaran ini terbatas dan tidak bisa dipakai memuluskan posisi yang
+         * benar-benar jauh.
+         */
+        $toleransi = $radius + (int) ($accuracy ?? 0);
+
         $status = match (true) {
-            $jarak <= $radius     => 'sesuai',
-            $jarak <= $radius * 2 => 'perlu_review',
-            default               => 'jauh',
+            $jarak <= $toleransi     => 'sesuai',
+            $jarak <= $toleransi * 2 => 'perlu_review',
+            default                  => 'jauh',
         };
 
-        return ['status' => $status, 'jarak_m' => $jarak, 'radius_m' => $radius];
+        return [
+            'status'    => $status,
+            'jarak_m'   => $jarak,
+            'radius_m'  => $radius,
+            'toleransi' => $toleransi,
+        ];
     }
 
     /** Status yang masuk antrean tinjauan admin (Bagian 8.2 /admin/penyimpangan). */

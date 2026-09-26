@@ -82,7 +82,23 @@ class SeedIntegrityTest extends TestCase
     public function semua_aset_punya_koordinat_dan_radius(): void
     {
         $this->assertSame(0, Asset::whereNull('lat')->orWhereNull('lng')->count());
-        $this->assertSame(0, Asset::whereNull('radius_m')->count());
+
+        /*
+         * radius_m sengaja dibiarkan kosong kalau radiusnya sama dengan bawaan
+         * jenis lokasi (Bagian 5.5): kolom itu OVERRIDE per aset, bukan salinan
+         * nilai bawaan. Kalau diisi semua, perubahan kebijakan radius harus
+         * menyentuh 35 baris. Yang wajib ada adalah radius EFEKTIF.
+         */
+        foreach (Asset::all() as $aset) {
+            $this->assertNotNull(
+                $aset->radiusEfektif(),
+                "Aset {$aset->kode} tidak punya radius efektif.",
+            );
+            $this->assertGreaterThan(0, $aset->radiusEfektif());
+        }
+
+        // lokasi_tipe wajib terisi, karena dialah sumber radius bawaan.
+        $this->assertSame(0, Asset::whereNull('lokasi_tipe')->count());
     }
 
     /**
@@ -137,15 +153,32 @@ class SeedIntegrityTest extends TestCase
         $this->assertSame(0, ChecklistItem::whereNull('dasar_hukum')->count());
     }
 
-    /** APAR tidak dioperasikan saat inspeksi, jadi hanya segel yang berdimensi fungsi. */
+    /** APAR hanya dilihat, tidak dioperasikan, jadi tak ada butir berdimensi fungsi. */
     #[Test]
-    public function hanya_segel_yang_berdimensi_fungsi(): void
+    public function checklist_apar_tanpa_dimensi_fungsi(): void
     {
-        $fungsi = ChecklistItem::where('answer_type', 'fungsi')->get();
+        /*
+         * APAR tidak dioperasikan saat inspeksi, hanya dilihat, jadi TIDAK ADA
+         * butir berdimensi 'fungsi' di checklist APAR. Dimensi fungsi baru
+         * muncul di Hydrant (kran dibuka) dan Mobil Pemadam (mesin dinyalakan).
+         *
+         * Pembagian nyata: 7 boolean (ada / tidak ada) + 3 select berperingkat.
+         * Ketiga select itu ada karena satu nilai benar/salah tidak cukup:
+         * tingkat karat dan arah simpangan tekanan menentukan berat temuan.
+         */
+        $this->assertSame(0, ChecklistItem::where('answer_type', 'fungsi')->count());
+        $this->assertSame(7, ChecklistItem::where('answer_type', 'boolean')->count());
+        $this->assertSame(3, ChecklistItem::where('answer_type', 'select')->count());
 
-        $this->assertCount(1, $fungsi);
-        $this->assertStringContainsString('Segel', $fungsi->first()->label);
-        $this->assertSame(9, ChecklistItem::where('answer_type', 'kondisi')->count());
+        // Semua butir boolean dicetak sebagai dua nilai di laporan PMS.
+        foreach (ChecklistItem::where('answer_type', 'boolean')->get() as $item) {
+            $this->assertTrue($item->isDuaNilai(), "Butir {$item->label} harus dua nilai.");
+        }
+
+        // Setiap select wajib punya options, kalau tidak layar isian jadi kosong.
+        foreach (ChecklistItem::where('answer_type', 'select')->get() as $item) {
+            $this->assertNotEmpty($item->daftarPilihan(), "Select {$item->label} tanpa pilihan.");
+        }
     }
 
     #[Test]
