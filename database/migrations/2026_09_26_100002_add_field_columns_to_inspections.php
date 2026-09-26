@@ -30,8 +30,10 @@ return new class extends Migration
                 ->constrained('users')->nullOnDelete();
             $table->text('catatan_review')->nullable()->after('ditinjau_oleh');
 
+            // Indeks ['asset_id','inspected_at'] TIDAK didaftarkan di sini.
+            // Migration create_inspections_table sudah membuatnya, dan mendaftar
+            // ulang membuat migrate:fresh gagal dengan "index ... already exists".
             $table->index(['gate_status', 'inspected_at']);
-            $table->index(['asset_id', 'inspected_at']);
         });
     }
 
@@ -39,7 +41,6 @@ return new class extends Migration
     {
         Schema::table('inspections', function (Blueprint $table) {
             $table->dropIndex(['gate_status', 'inspected_at']);
-            $table->dropIndex(['asset_id', 'inspected_at']);
             $table->dropConstrainedForeignId('ditinjau_oleh');
             $table->dropColumn([
                 'kesimpulan', 'mulai_pada', 'durasi_detik', 'device_time',
