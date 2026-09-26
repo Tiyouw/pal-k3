@@ -49,6 +49,15 @@ class Inspection extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Admin yang menandai penyimpangan lokasi sudah diperiksa. Dipisah dari
+     * user() supaya jelas mana pelaku lapangan dan mana peninjau meja.
+     */
+    public function peninjau(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ditinjau_oleh');
+    }
+
     public function answers(): HasMany
     {
         return $this->hasMany(InspectionAnswer::class);
