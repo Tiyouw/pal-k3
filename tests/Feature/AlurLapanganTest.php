@@ -121,4 +121,31 @@ class AlurLapanganTest extends TestCase
         $this->actingAs($this->inspektur)->get('/petugas')->assertOk();
         $this->actingAs($this->inspektur)->get('/petugas/riwayat')->assertOk();
     }
+
+    /**
+     * Tabel inspeksi di panel admin dengan baris draf nyata.
+     *
+     * Smoke panel yang lain berjalan di tabel kosong, jadi closure kolom tidak
+     * pernah dievaluasi dan galat nama parameter lolos. Draf punya inspected_at,
+     * kesimpulan, jarak_m, dan durasi_detik yang masih NULL sekaligus, jadi
+     * baris ini yang paling keras menguji kolom.
+     */
+    #[Test]
+    public function tabel_inspeksi_admin_merender_dengan_baris_draf(): void
+    {
+        $this->withoutExceptionHandling();
+
+        $this->actingAs($this->inspektur)->get('/i/' . $this->asset->qr_token);
+
+        $draf = Inspection::query()->firstOrFail();
+        $this->assertNull($draf->inspected_at);
+        $this->assertNull($draf->kesimpulan);
+
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get('/admin/inspections')
+            ->assertOk()
+            ->assertSee($this->asset->kode);
+    }
 }

@@ -168,7 +168,7 @@ class InspectionResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (?string $s) => $s === 'final' ? 'success' : 'gray'),
+                    ->color(fn (?string $state) => $state === 'final' ? 'success' : 'gray'),
                 Tables\Columns\IconColumn::make('ditinjau_pada')
                     ->label('Ditinjau')
                     ->state(fn (Inspection $r) => $r->ditinjau_pada !== null)
