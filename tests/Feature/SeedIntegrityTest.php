@@ -78,6 +78,43 @@ class SeedIntegrityTest extends TestCase
         }
     }
 
+    /**
+     * Repositori bersifat publik, jadi token tidak boleh ada di berkas seed.
+     *
+     * Token adalah satu-satunya gerbang penentu aset di InspeksiController.
+     * Kalau seseorang menambahkan kembali kolom qr_token ke CSV supaya seed
+     * "lebih pasti", siapa pun pembaca repo bisa mengirim inspeksi tanpa datang
+     * ke lokasi dan premis QR sebagai bukti kehadiran fisik runtuh.
+     */
+    #[Test]
+    public function berkas_seed_csv_tidak_memuat_token(): void
+    {
+        $isi = file_get_contents(base_path('database/seed/pal_seed_apar_35.csv'));
+
+        $this->assertStringNotContainsString('PAL-K3-', $isi);
+        $this->assertStringNotContainsString('qr_token', $isi);
+    }
+
+    /**
+     * Seed ulang tidak boleh menerbitkan token baru.
+     *
+     * Token tercetak permanen pada stiker fisik di 35 titik. Kalau seed ulang
+     * menggantinya, seluruh stiker yang sudah tertempel mati dan harus dicetak
+     * serta ditempel ulang di lapangan. Penggantian token hanya boleh lewat
+     * aksi sadar "Ganti token stiker QR" di panel admin, satu aset per kali.
+     */
+    #[Test]
+    public function seed_ulang_tidak_mengganti_token_stiker(): void
+    {
+        $sebelum = Asset::orderBy('kode')->pluck('qr_token', 'kode')->all();
+
+        $this->seed(AparSeeder::class);
+
+        $sesudah = Asset::orderBy('kode')->pluck('qr_token', 'kode')->all();
+
+        $this->assertSame($sebelum, $sesudah);
+    }
+
     #[Test]
     public function semua_aset_punya_koordinat_dan_radius(): void
     {

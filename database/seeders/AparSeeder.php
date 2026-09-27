@@ -10,7 +10,7 @@ use RuntimeException;
 
 class AparSeeder extends Seeder
 {
-    /** Berkas sumber: kode,tipe,kapasitas_kg,gedung,lantai,lokasi_teks,lat,lng,radius_m,qr_token */
+    /** Berkas sumber: kode,tipe,kapasitas_kg,gedung,lantai,lokasi_teks,lat,lng,radius_m */
     private const CSV = 'database/seed/pal_seed_apar_35.csv';
 
     public function run(): void
@@ -33,7 +33,16 @@ class AparSeeder extends Seeder
             $header ?: []
         );
 
-        $wajib = ['kode', 'tipe', 'kapasitas_kg', 'gedung', 'lantai', 'lokasi_teks', 'lat', 'lng', 'radius_m', 'qr_token'];
+        /**
+         * qr_token TIDAK ada di CSV dan tidak boleh ditambahkan.
+         *
+         * Token adalah rahasia: dia satu-satunya gerbang penentu aset di
+         * InspeksiController::mulai(). Kalau token ikut disimpan di berkas seed
+         * yang masuk repo, siapa pun yang membaca repo bisa mengirim inspeksi
+         * tanpa datang ke lokasi, dan premis QR sebagai bukti kehadiran fisik
+         * runtuh. Token diterbitkan acak oleh Asset::booted() saat baris dibuat.
+         */
+        $wajib = ['kode', 'tipe', 'kapasitas_kg', 'gedung', 'lantai', 'lokasi_teks', 'lat', 'lng', 'radius_m'];
         $hilang = array_diff($wajib, $header);
 
         if ($hilang !== []) {
@@ -77,7 +86,6 @@ class AparSeeder extends Seeder
                     'lat'          => (float) $row['lat'],
                     'lng'          => (float) $row['lng'],
                     'radius_m'     => $override,
-                    'qr_token'     => $row['qr_token'],
                     'attributes'   => [
                         'tipe'         => $row['tipe'],
                         'kapasitas_kg' => $this->angka($row['kapasitas_kg']),

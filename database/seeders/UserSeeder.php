@@ -7,17 +7,24 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 /**
- * Bagian 13 rancangan: sembilan petugas untuk data awal pengembangan.
+ * Bagian 13 rancangan: sembilan petugas untuk data awal.
  *
  * Bagian 11.4 (kebijakan data pribadi): nama di sini adalah nama peran, BUKAN nama
  * pegawai PT PAL yang sebenarnya. Penggantian ke nama asli cukup dilakukan pada
  * berkas data awal ini, tidak menyentuh kode.
  *
- * Kata sandi awal sengaja seragam dan lemah karena ini lingkungan uji coba yang
- * diisi data sementara. Sebelum dipakai dengan data nyata PT PAL, kata sandi
- * wajib diganti dan pendaftaran petugas dilakukan lewat panel admin.
+ * KATA SANDI TIDAK DITULIS DI DALAM KODE.
+ *
+ * Repositori ini publik. Sandi yang tertulis di berkas seed akan terbaca semua
+ * orang, dan karena aplikasi ini melayani kepatuhan K3, akun inspektur yang
+ * bisa ditebak berarti laporan inspeksi APAR bisa dipalsukan tanpa datang ke
+ * lokasi. Karena itu sandi diambil dari SEED_SANDI_AWAL di berkas .env, dan
+ * kalau variabel itu kosong seeder menerbitkan sandi acak lalu mencetaknya
+ * sekali ke layar. Sandi acak tidak disimpan ke mana pun: kalau terlewat,
+ * gunakan `php artisan petugas:sandi <nip>` untuk menerbitkan yang baru.
  *
  * Peran (Bagian 3.3):
  *   inspektur -> ponsel, mengisi checklist, melihat riwayat inspeksinya sendiri
@@ -26,8 +33,6 @@ use Illuminate\Support\Facades\Schema;
  */
 class UserSeeder extends Seeder
 {
-    private const SANDI_AWAL = 'SANDI-DICABUT-DARI-RIWAYAT';
-
     public function run(): void
     {
         $k3lh = Division::where('kode', 'K3LH')->first();
@@ -55,6 +60,13 @@ class UserSeeder extends Seeder
 
         $kolomDivisiAda = Schema::hasColumn('users', 'division_id');
 
+        // Sandi dari .env dipakai apa adanya. Kalau tidak diisi, terbitkan acak
+        // sekali untuk seluruh akun baru pada jalan seed ini.
+        $sandiEnv  = (string) env('SEED_SANDI_AWAL', '');
+        $sandi     = $sandiEnv !== '' ? $sandiEnv : Str::password(16, symbols: false);
+        $dariEnv   = $sandiEnv !== '';
+        $akunBaru  = 0;
+
         foreach ($data as [$nip, $nama, $email, $role, $jabatan]) {
             $adaSebelumnya = User::where('nip', $nip)->exists();
 
@@ -72,7 +84,8 @@ class UserSeeder extends Seeder
             // untuk ditambal. Pada baris yang sudah ada, sandi tidak disentuh
             // supaya seed ulang tidak menimpa sandi yang diganti admin.
             if (! $adaSebelumnya) {
-                $atribut['password'] = Hash::make(self::SANDI_AWAL);
+                $atribut['password'] = Hash::make($sandi);
+                $akunBaru++;
             }
 
             $user = User::updateOrCreate(['nip' => $nip], $atribut);
@@ -86,6 +99,14 @@ class UserSeeder extends Seeder
             }
         }
 
-        $this->command?->info('Petugas diseed: ' . count($data) . ' (sandi awal: ' . self::SANDI_AWAL . ')');
+        $this->command?->info('Petugas diseed: ' . count($data) . " (akun baru: {$akunBaru})");
+
+        // Sandi acak hanya ada di memori proses ini, jadi harus ditampilkan
+        // sekarang atau hilang. Sandi dari .env tidak dicetak: pemiliknya sudah
+        // tahu, dan mencetaknya hanya menambah jejak di log terminal.
+        if ($akunBaru > 0 && ! $dariEnv) {
+            $this->command?->warn("Sandi awal untuk {$akunBaru} akun baru: {$sandi}");
+            $this->command?->warn('Catat sekarang. Sandi ini tidak disimpan dan tidak bisa ditampilkan ulang.');
+        }
     }
 }
