@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\AssetResource;
 use App\Models\Asset;
+use App\Models\AssetType;
 use App\Models\Division;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,8 +17,11 @@ use Tests\TestCase;
  * membaca papan pantau dan laporan) melihat tombol Simpan dan Hapus di form
  * ubah aset. Repo tak punya app/Policies dan AssetResource tak punya
  * canEdit/canDelete/canCreate, jadi Filament memakai bawaannya: izinkan semua.
- * Test ini memastikan apakah itu benar-benar bocor di server, bukan cuma
- * tombol yang tampil, dan menjadi penjaga supaya tak balik bocor.
+ * Test ini membuktikan apakah itu benar-benar bocor di sisi server, bukan
+ * cuma tombol yang tampil, dan jadi penjaga supaya tak balik bocor.
+ *
+ * Catatan skema: asset_types.slug wajib (NOT NULL unik) dan users masih
+ * memakai email unik dari tabel bawaan Laravel di samping nip.
  */
 class OtorisasiPanelTest extends TestCase
 {
@@ -24,16 +29,24 @@ class OtorisasiPanelTest extends TestCase
 
     private function buatAset(): Asset
     {
-        $div = Division::create([
-            'nama' => 'Divisi Uji', 'kode' => 'UJI', 'aktif' => true,
+        $tipe = AssetType::create([
+            'slug' => 'apar',
+            'nama' => 'APAR',
+            'periode_hari' => 30,
+            'aktif' => true,
         ]);
 
+        $div = Division::create([
+            'nama' => 'Divisi Uji',
+            'kode' => 'UJI',
+            'aktif' => true,
+        ]);
+
+        // qr_token sengaja tak diisi: Asset::booted() menerbitkannya sendiri.
         return Asset::create([
-            'kode' => 'UJI-01',
-            'asset_type_id' => \App\Models\AssetType::create([
-                'nama' => 'APAR', 'kode' => 'APAR', 'aktif' => true,
-            ])->id,
+            'asset_type_id' => $tipe->id,
             'division_id' => $div->id,
+            'kode' => 'UJI-01',
             'gedung' => 'Gedung Uji',
             'lantai' => 'Lt. 1',
             'lokasi_teks' => 'Titik uji',
@@ -41,57 +54,61 @@ class OtorisasiPanelTest extends TestCase
         ]);
     }
 
-    private function buatPengguna(string $peran): User
+    private function buatPengguna(string $peran, string $nip): User
     {
         return User::create([
-            'nip' => $peran === User::ROLE_PEMANTAU ? '3009' : '1009',
+            'nip' => $nip,
             'name' => "Uji {$peran}",
-            'password' => bcrypt('sandi-uji-panjang'),
+            'email' => "{$nip}@uji.local",
+            'password' => bcrypt('sandi-uji-yang-panjang'),
             'role' => $peran,
+            'jabatan' => "Uji {$peran}",
             'aktif' => true,
         ]);
     }
 
-    public function test_pemantau_tidak_boleh_mengubah_aset(): void
+    public function test_pemantau_tidak_boleh_menulis_data_aset(): void
     {
         $aset = $this->buatAset();
-        $pemantau = $this->buatPengguna(User::ROLE_PEMANTAU);
-
-        $this->actingAs($pemantau);
-
-        // Filament menilai wewenang lewat Resource; kalau tak ada aturan,
-        // pemantau dianggap boleh menulis.
-        $bolehUbah = \App\Filament\Resources\AssetResource::canEdit($aset);
-        $bolehHapus = \App\Filament\Resources\AssetResource::canDelete($aset);
-        $bolehBuat = \App\Filament\Resources\AssetResource::canCreate();
+        $this->actingAs($this->buatPengguna(User::ROLE_PEMANTAU, '3009'));
 
         $this->assertFalse(
-            $bolehUbah,
+            AssetResource::canEdit($aset),
             'Pemantau seharusnya TIDAK boleh mengubah aset.'
         );
         $this->assertFalse(
-            $bolehHapus,
+            AssetResource::canDelete($aset),
             'Pemantau seharusnya TIDAK boleh menghapus aset.'
         );
         $this->assertFalse(
-            $bolehBuat,
+            AssetResource::canCreate(),
             'Pemantau seharusnya TIDAK boleh membuat aset.'
         );
     }
 
-    public function test_admin_tetap_boleh_mengubah_aset(): void
+    public function test_pemantau_masih_boleh_melihat_daftar_aset(): void
     {
         $aset = $this->buatAset();
-        $admin = $this->buatPengguna(User::ROLE_ADMIN);
+        $this->actingAs($this->buatPengguna(User::ROLE_PEMANTAU, '3010'));
 
-        $this->actingAs($admin);
+        // Pemantau tetap perlu membaca: tugasnya memantau, bukan mengubah.
+        $this->assertTrue(
+            AssetResource::canViewAny(),
+            'Pemantau harus tetap boleh melihat daftar aset.'
+        );
+    }
+
+    public function test_admin_tetap_boleh_menulis_data_aset(): void
+    {
+        $aset = $this->buatAset();
+        $this->actingAs($this->buatPengguna(User::ROLE_ADMIN, '1009'));
 
         $this->assertTrue(
-            \App\Filament\Resources\AssetResource::canEdit($aset),
+            AssetResource::canEdit($aset),
             'Admin harus tetap boleh mengubah aset.'
         );
         $this->assertTrue(
-            \App\Filament\Resources\AssetResource::canCreate(),
+            AssetResource::canCreate(),
             'Admin harus tetap boleh membuat aset.'
         );
     }
