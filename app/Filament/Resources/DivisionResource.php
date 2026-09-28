@@ -22,6 +22,18 @@ class DivisionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
+    // sehingga sidebar dan judul tab berbunyi "Division".
+    protected static ?string $navigationLabel = 'Divisi';
+
+    protected static ?string $modelLabel = 'Divisi';
+
+    protected static ?string $pluralModelLabel = 'Divisi';
+
+    protected static ?string $navigationGroup = 'Data Induk';
+
+    protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form

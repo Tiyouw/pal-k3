@@ -48,6 +48,18 @@ class RingkasanKepatuhan extends BaseWidget
             ->whereDate('target_selesai', '<', now())
             ->count();
 
+        // diffInDays() mengembalikan pecahan (mis. 2.8832669012153) sejak Carbon 3
+        // dan angka itu sempat tercetak apa adanya di dasbor. Dibulatkan ke atas
+        // karena sisa "2,88 hari" dalam praktik kerja berarti masih ada 3 hari
+        // kerja untuk mengejar unit yang belum diperiksa.
+        $hariTersisa = (int) ceil(now()->diffInDays($akhir, absolute: true));
+
+        $sisaHari = match (true) {
+            $hariTersisa <= 0 => 'Hari terakhir bulan ini',
+            $hariTersisa === 1 => 'Sisa 1 hari bulan ini',
+            default => "Sisa {$hariTersisa} hari bulan ini",
+        };
+
         $perluTinjauan = Inspection::where('status', 'final')
             ->whereIn('gate_status', ['jauh', 'perlu_review', 'gps_lemah'])
             ->whereNull('ditinjau_pada')
@@ -60,7 +72,7 @@ class RingkasanKepatuhan extends BaseWidget
                 ->color($persen >= 90 ? 'success' : ($persen >= 70 ? 'warning' : 'danger')),
 
             Stat::make('Belum diperiksa', max($total - $diperiksa, 0) . ' unit')
-                ->description('Sisa hari bulan ini: ' . now()->diffInDays($akhir))
+                ->description($sisaHari)
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($total - $diperiksa > 0 ? 'warning' : 'success'),
 

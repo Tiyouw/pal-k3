@@ -22,6 +22,18 @@ class IssueResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
+    // sehingga sidebar dan judul tab berbunyi "Issue".
+    protected static ?string $navigationLabel = 'Temuan';
+
+    protected static ?string $modelLabel = 'Temuan';
+
+    protected static ?string $pluralModelLabel = 'Temuan';
+
+    protected static ?string $navigationGroup = 'Kegiatan';
+
+    protected static ?int $navigationSort = 2;
+
     public static function form(Form $form): Form
     {
         return $form

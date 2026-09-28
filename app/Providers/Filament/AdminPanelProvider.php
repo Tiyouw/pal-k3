@@ -27,6 +27,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            // Merek ditulis tetap di sini, tidak diambil dari APP_NAME, supaya
+            // judul tab tidak ikut berubah jadi "Laravel" kalau .env di server
+            // belum disetel. Sebelum ini judulnya terbaca "Dasbor - Laravel".
+            ->brandName('Inspeksi K3 APAR')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -38,7 +42,10 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                // FilamentInfoWidget dibuang: widget itu memasang "v3.3.55
+                // Dokumentasi GitHub" di dasbor, yaitu perkakas pembangun yang
+                // tak berarti bagi petugas K3 dan membocorkan versi kerangka
+                // kerja ke pengguna panel.
             ])
             ->middleware([
                 EncryptCookies::class,

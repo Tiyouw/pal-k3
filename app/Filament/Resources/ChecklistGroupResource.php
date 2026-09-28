@@ -22,6 +22,18 @@ class ChecklistGroupResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
+    // sehingga sidebar dan judul tab berbunyi "ChecklistGroup".
+    protected static ?string $navigationLabel = 'Grup Checklist';
+
+    protected static ?string $modelLabel = 'Grup Checklist';
+
+    protected static ?string $pluralModelLabel = 'Grup Checklist';
+
+    protected static ?string $navigationGroup = 'Data Induk';
+
+    protected static ?int $navigationSort = 4;
+
     public static function form(Form $form): Form
     {
         return $form

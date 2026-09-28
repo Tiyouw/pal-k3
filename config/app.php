@@ -65,7 +65,13 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    /*
+     * Dibaca dari APP_TIMEZONE, tidak dipaku ke UTC. Berkas .env di server
+     * sudah meminta Asia/Jakarta, tetapi nilai paku di sini mengabaikannya
+     * sehingga jam yang tampil bergeser tujuh jam dari label "WIB" yang
+     * tercetak di samping tiap waktu inspeksi.
+     */
+    'timezone' => env('APP_TIMEZONE', 'Asia/Jakarta'),
 
     /*
     |--------------------------------------------------------------------------
