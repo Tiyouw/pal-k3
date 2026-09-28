@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\AssetTypeResource\Pages;
 use App\Filament\Resources\AssetTypeResource\RelationManagers;
 use App\Models\AssetType;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AssetTypeResource extends Resource
 {
+    use HanyaAdminBolehMenulis;
+
     protected static ?string $model = AssetType::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\AssetResource\Pages;
 use App\Models\Asset;
 use Filament\Forms;
@@ -23,6 +24,8 @@ use Filament\Tables\Table;
  */
 class AssetResource extends Resource
 {
+    use HanyaAdminBolehMenulis;
+
     protected static ?string $model = Asset::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-fire';

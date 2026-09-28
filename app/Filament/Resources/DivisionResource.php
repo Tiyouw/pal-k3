@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\DivisionResource\Pages;
 use App\Filament\Resources\DivisionResource\RelationManagers;
 use App\Models\Division;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DivisionResource extends Resource
 {
+    use HanyaAdminBolehMenulis;
+
     protected static ?string $model = Division::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

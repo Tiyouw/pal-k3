@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\InspectionResource\Pages;
 use App\Models\Asset;
 use App\Models\Inspection;
@@ -28,6 +29,13 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class InspectionResource extends Resource
 {
+    /**
+     * canCreate() di bawah menang atas trait (method class mengalahkan trait),
+     * jadi larangan "inspeksi hanya lahir dari lapangan" tetap berlaku untuk
+     * admin sekalipun. Trait di sini menutup sunting dan hapus untuk pemantau.
+     */
+    use HanyaAdminBolehMenulis;
+
     protected static ?string $model = Inspection::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';

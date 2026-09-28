@@ -85,6 +85,17 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Pemantau hanya membaca papan pantau dan laporan. Dipakai untuk menutup
+     * tombol tulis di panel: sebelum ini pemantau bisa mengubah dan menghapus
+     * data induk karena Resource tanpa aturan wewenang dianggap terbuka oleh
+     * Filament.
+     */
+    public function isPemantau(): bool
+    {
+        return $this->role === self::ROLE_PEMANTAU;
+    }
+
+    /**
      * Boleh membuka halaman pengelolaan di luar panel Filament: lembar stiker QR
      * dan laporan bulanan. Sengaja dipisah dari canAccessPanel() supaya syarat
      * Filament dan syarat halaman biasa dapat berbeda tanpa saling menarik.

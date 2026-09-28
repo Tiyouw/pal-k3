@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\ChecklistGroupResource\Pages;
 use App\Filament\Resources\ChecklistGroupResource\RelationManagers;
 use App\Models\ChecklistGroup;
@@ -15,6 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ChecklistGroupResource extends Resource
 {
+    use HanyaAdminBolehMenulis;
+
     protected static ?string $model = ChecklistGroup::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
