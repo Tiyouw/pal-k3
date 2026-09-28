@@ -6,6 +6,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -38,6 +39,34 @@ class AdminPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
+            ])
+            /*
+             * Halaman pengelolaan di luar panel disambungkan ke sidebar.
+             *
+             * Lembar stiker QR dan laporan bulanan adalah rute Blade biasa, bukan
+             * Resource Filament, jadi keduanya tidak pernah muncul di navigasi.
+             * Akibatnya admin harus mengetik /stiker dan /laporan dari ingatan;
+             * pemeriksaan di situs hidup menemukan /stiker malah jalan buntu tanpa
+             * satu pun tautan keluar.
+             *
+             * Wewenangnya tetap dijaga middleware 'pengelola' di routes/web.php;
+             * visible() di sini hanya menyembunyikan tautan yang toh akan 403,
+             * supaya inspektur tidak disuguhi pintu yang terkunci.
+             */
+            ->navigationItems([
+                NavigationItem::make('Lembar Stiker QR')
+                    ->url(fn (): string => route('stiker.index'))
+                    ->icon('heroicon-o-qr-code')
+                    ->group('Kegiatan')
+                    ->sort(8)
+                    ->visible(fn (): bool => auth()->user()?->bolehPanel() ?? false),
+
+                NavigationItem::make('Laporan Bulanan')
+                    ->url(fn (): string => route('laporan.index'))
+                    ->icon('heroicon-o-document-chart-bar')
+                    ->group('Kegiatan')
+                    ->sort(9)
+                    ->visible(fn (): bool => auth()->user()?->bolehPanel() ?? false),
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

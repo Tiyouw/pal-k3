@@ -38,6 +38,18 @@
         .panel .cetak { background: #157347; }
         .panel .ket { font-size: .82rem; color: #6c757d; margin: 10px 0 0; max-width: 70ch; }
 
+        /* ---------- kepala navigasi, tidak dicetak ----------
+           Halaman ini sebelumnya tidak punya satu pun tautan keluar, jadi begitu
+           dibuka satu-satunya jalan kembali adalah tombol mundur peramban. */
+        .kepala {
+            background: #0f3c68; color: #fff; padding: 14px 20px;
+            display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+            justify-content: space-between;
+        }
+        .kepala h1 { font-size: 1.05rem; margin: 0; font-weight: 600; }
+        .kepala nav { display: flex; flex-wrap: wrap; gap: 16px; }
+        .kepala a { color: #fff; font-size: .88rem; text-decoration: underline; }
+
         /* ---------- lembar ---------- */
         .lembar {
             width: 210mm; min-height: 297mm; background: #fff; margin: 16px auto;
@@ -78,7 +90,10 @@
 
         @media print {
             body { background: #fff; }
-            .panel { display: none; }
+            /* Kepala navigasi ikut disembunyikan bersama panel penyaring: keduanya
+               perkakas layar. Kalau tertinggal, lembar pertama kehilangan satu baris
+               label karena terdorong turun. */
+            .panel, .kepala { display: none; }
             .lembar {
                 margin: 0; box-shadow: none; padding: 8mm 5mm;
                 page-break-after: always; break-after: page;
@@ -91,6 +106,14 @@
     </style>
 </head>
 <body>
+    <div class="kepala">
+        <h1>Lembar Stiker QR</h1>
+        <nav aria-label="Pindah halaman pengelolaan">
+            <a href="/admin">Panel admin</a>
+            <a href="{{ route('laporan.index') }}">Laporan bulanan</a>
+        </nav>
+    </div>
+
     <div class="panel">
         <form method="GET" action="{{ route('stiker.index') }}">
             <div>
