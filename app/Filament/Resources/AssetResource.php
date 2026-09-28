@@ -158,7 +158,9 @@ class AssetResource extends Resource
                     ->badge()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('gedung')->label('Gedung')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('lantai')->label('Lt.')->searchable()->sortable(),
+                // Label kolom "Lantai", bukan "Lt.": nilai di kolom ini sudah
+                // berbunyi "Lt. 1" sehingga judul singkat membuatnya dobel.
+                Tables\Columns\TextColumn::make('lantai')->label('Lantai')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('lokasi_teks')
                     ->label('Lokasi')
                     ->searchable()

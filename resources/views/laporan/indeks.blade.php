@@ -209,7 +209,7 @@
                                 <td><strong>{{ $a->kode }}</strong></td>
                                 <td>
                                     {{ $a->lokasi_teks ?: $a->gedung }}
-                                    @if ($a->lantai)<span class="redup"> &middot; Lt. {{ $a->lantai }}</span>@endif
+                                    @if ($a->labelLantai())<span class="redup"> &middot; {{ $a->labelLantai() }}</span>@endif
                                 </td>
                                 <td>
                                     {{ $ins ? $ins->inspected_at->translatedFormat('d M Y, H:i') : '-' }}

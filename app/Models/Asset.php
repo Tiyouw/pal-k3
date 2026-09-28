@@ -241,4 +241,44 @@ class Asset extends Model
     {
         return trim($this->kode . ' - ' . Str::limit($this->lokasi_teks, 40));
     }
+
+    /**
+     * Label lantai yang siap dicetak, atau null kalau lantainya tak bermakna.
+     *
+     * Kolom lantai di CSV sumber sudah berisi awalan sendiri ("Lt. 1"), jadi
+     * view yang menambahkan "Lt. " lagi menghasilkan "LT. LT. 1" di stiker dan
+     * dasbor. Aset di area terbuka diisi "-", yang kalau diawali jadi "Lt. -".
+     * Keduanya diselesaikan di satu tempat supaya tiap view tak perlu tahu
+     * bentuk data mentahnya.
+     */
+    public function labelLantai(): ?string
+    {
+        $lantai = trim((string) $this->lantai);
+
+        // Tanda hubung dan strip panjang dipakai di data sebagai "tanpa lantai".
+        if ($lantai === '' || in_array($lantai, ['-', '–', '—'], true)) {
+            return null;
+        }
+
+        // Sudah berawalan Lt./Lantai dalam bentuk apa pun: pakai apa adanya.
+        if (preg_match('/^(lt\.?|lantai)\s/i', $lantai)) {
+            return $lantai;
+        }
+
+        return 'Lt. ' . $lantai;
+    }
+
+    /**
+     * Satu baris lokasi: gedung ditambah lantai kalau ada, dipisah titik tengah.
+     * Dipakai stiker, dasbor petugas, dan laporan supaya bunyinya seragam.
+     */
+    public function labelLokasi(string $pemisah = ' · '): string
+    {
+        $bagian = array_filter([
+            $this->lokasi_teks ?: $this->gedung,
+            $this->labelLantai(),
+        ]);
+
+        return implode($pemisah, $bagian) ?: '-';
+    }
 }

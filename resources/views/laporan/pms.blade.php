@@ -116,7 +116,7 @@
                     <td class="kode">{{ $a->kode }}</td>
                     <td>
                         {{ $a->lokasi_teks ?: $a->gedung }}
-                        @if ($a->lantai)<span class="kecil"> (Lt. {{ $a->lantai }})</span>@endif
+                        @if ($a->labelLantai())<span class="kecil"> ({{ $a->labelLantai() }})</span>@endif
                     </td>
                     <td style="text-align:center">
                         {{ $ins ? $ins->inspected_at->format('d/m') : '-' }}

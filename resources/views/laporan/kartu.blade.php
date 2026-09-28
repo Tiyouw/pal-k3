@@ -79,7 +79,7 @@
             <th>Lokasi</th>
             <td>{{ $asset->lokasi_teks ?: '-' }}</td>
             <th>Gedung</th>
-            <td>{{ $asset->gedung ?: '-' }}{{ $asset->lantai ? ', Lt. ' . $asset->lantai : '' }}</td>
+            <td>{{ $asset->gedung ?: '-' }}{{ $asset->labelLantai() ? ', ' . $asset->labelLantai() : '' }}</td>
         </tr>
         <tr>
             <th>Divisi</th>

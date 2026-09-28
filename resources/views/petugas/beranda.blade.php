@@ -2,7 +2,9 @@
 
 @section('judul', 'Beranda Petugas')
 @section('judul-kepala', $user->name)
-@section('sub-kepala', 'NIP ' . ($user->nip ?? '-') . ' &middot; ' . ($user->jabatan ?: 'Inspektur'))
+{{-- Titik tengah ditulis sebagai karakter, bukan entitas: @section melewati
+     string ini ke {{ }} yang meng-escape "&" jadi teks "&middot;". --}}
+@section('sub-kepala', 'NIP ' . ($user->nip ?? '-') . ' · ' . ($user->jabatan ?: 'Inspektur'))
 
 @section('kembali')
     <span aria-hidden="true" style="width:44px; height:44px; display:inline-flex;
@@ -71,7 +73,7 @@
             @endif
         </div>
 
-        @forelse ($belum->groupBy(fn ($a) => trim(($a->gedung ?: 'Lainnya') . ' ' . ($a->lantai ? 'Lt. ' . $a->lantai : ''))) as $grup => $daftar)
+        @forelse ($belum->groupBy(fn ($a) => trim(($a->gedung ?: 'Lainnya') . ' ' . ($a->labelLantai() ?? ''))) as $grup => $daftar)
             <div style="margin-top:14px">
                 <p style="margin:0 0 6px; font-size:.8rem; font-weight:700; color:var(--abu);
                           text-transform:uppercase; letter-spacing:.4px">

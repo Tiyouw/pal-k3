@@ -108,8 +108,8 @@
                     <td><strong>{{ $t->asset?->kode ?? '-' }}</strong></td>
                     <td>
                         {{ $t->asset?->lokasi_teks ?: $t->asset?->gedung }}
-                        @if ($t->asset?->lantai)
-                            <span class="kecil">(Lt. {{ $t->asset->lantai }})</span>
+                        @if ($t->asset?->labelLantai())
+                            <span class="kecil">({{ $t->asset->labelLantai() }})</span>
                         @endif
                     </td>
                     <td>

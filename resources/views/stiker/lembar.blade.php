@@ -162,7 +162,10 @@
                         <div class="jenis">{{ $a->assetType?->nama ?? 'Objek K3' }}</div>
                         <div class="kode">{{ $a->kode }}</div>
                         <div class="lokasi">
-                            {{ $a->lokasi_teks ?: $a->gedung }}{{ $a->lantai ? ' &middot; Lt. ' . $a->lantai : '' }}
+                            {{-- labelLokasi() dipakai karena entitas HTML di dalam {{ }}
+                                 tercetak mentah sebagai "&middot;" di stiker fisik, dan
+                                 kolom lantai sudah berawalan sendiri. --}}
+                            {{ $a->labelLokasi() }}
                         </div>
                         <div class="perintah">Pindai sebelum memeriksa</div>
                         <div class="token">{{ $a->qr_token }}</div>

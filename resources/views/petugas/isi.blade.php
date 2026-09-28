@@ -2,7 +2,7 @@
 
 @section('judul', 'Inspeksi ' . $asset->kode)
 @section('judul-kepala', $asset->kode)
-@section('sub-kepala', $asset->lokasi_teks ?: trim($asset->gedung . ' ' . ($asset->lantai ? 'Lt. ' . $asset->lantai : '')))
+@section('sub-kepala', $asset->labelLokasi())
 
 @section('kembali')
     {{-- Tautan beranda, bukan tombol kembali peramban: draf tetap tersimpan
@@ -75,7 +75,7 @@
             <dt>Lokasi</dt>
             <dd>{{ $asset->lokasi_teks ?: '-' }}</dd>
             <dt>Gedung</dt>
-            <dd>{{ $asset->gedung ?: '-' }}{{ $asset->lantai ? ', Lt. ' . $asset->lantai : '' }}</dd>
+            <dd>{{ $asset->gedung ?: '-' }}{{ $asset->labelLantai() ? ', ' . $asset->labelLantai() : '' }}</dd>
             @if ($asset->labelMedia())
                 <dt>Jenis media</dt>
                 <dd>{{ $asset->labelMedia() }}</dd>
