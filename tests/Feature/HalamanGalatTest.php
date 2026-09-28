@@ -21,17 +21,43 @@ class HalamanGalatTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const SANDI_UJI = 'sandi-uji-yang-panjang';
+
     private function buatPengguna(string $peran, string $nip): User
     {
         return User::create([
             'nip' => $nip,
             'name' => "Uji {$peran}",
             'email' => "{$nip}@uji.local",
-            'password' => bcrypt('sandi-uji-yang-panjang'),
+            'password' => bcrypt(self::SANDI_UJI),
             'role' => $peran,
             'jabatan' => "Uji {$peran}",
             'aktif' => true,
         ]);
+    }
+
+    /**
+     * Masuk lewat POST /masuk, bukan actingAs().
+     *
+     * Alasannya penting: actingAs() menyuntik pengguna langsung ke container
+     * sehingga halaman 404 tetap "melihat" pengguna walau sesi belum dibaca.
+     * Versi awal test ini memakai actingAs() dan memberi hijau palsu, sementara
+     * di situs hidup petugas yang sudah masuk tetap disuguhi tombol "Masuk
+     * dengan NIP". Masuk lewat sesi nyata membuat test menangkap kelas galat
+     * itu, termasuk kalau rute penadah 404 hilang lagi dari routes/web.php.
+     */
+    private function masukSebagai(string $peran, string $nip): User
+    {
+        $pengguna = $this->buatPengguna($peran, $nip);
+
+        $this->post('/masuk', [
+            'nip' => $nip,
+            'password' => self::SANDI_UJI,
+        ])->assertRedirect();
+
+        $this->assertAuthenticatedAs($pengguna);
+
+        return $pengguna;
     }
 
     public function test_alamat_tak_dikenal_membalas_404_berbahasa_indonesia(): void
@@ -54,7 +80,7 @@ class HalamanGalatTest extends TestCase
 
     public function test_404_untuk_inspektur_menawarkan_daftar_tugas_dan_pemindai(): void
     {
-        $this->actingAs($this->buatPengguna(User::ROLE_INSPEKTUR, '2091'));
+        $this->masukSebagai(User::ROLE_INSPEKTUR, '2091');
 
         $res = $this->get('/alamat-yang-tidak-pernah-ada');
 
@@ -64,7 +90,7 @@ class HalamanGalatTest extends TestCase
 
     public function test_404_untuk_pemantau_menawarkan_panel(): void
     {
-        $this->actingAs($this->buatPengguna(User::ROLE_PEMANTAU, '3091'));
+        $this->masukSebagai(User::ROLE_PEMANTAU, '3091');
 
         $res = $this->get('/alamat-yang-tidak-pernah-ada');
 
@@ -75,7 +101,7 @@ class HalamanGalatTest extends TestCase
 
     public function test_inspektur_yang_membuka_lembar_stiker_dapat_403_yang_menjelaskan(): void
     {
-        $this->actingAs($this->buatPengguna(User::ROLE_INSPEKTUR, '2092'));
+        $this->masukSebagai(User::ROLE_INSPEKTUR, '2092');
 
         $res = $this->get('/stiker');
 

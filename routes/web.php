@@ -100,3 +100,22 @@ Route::middleware(['auth', 'pengelola'])->group(function () {
         Route::get('/kartu/{asset}', [LaporanController::class, 'kartu'])->name('kartu');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Penadah alamat tak dikenal
+|--------------------------------------------------------------------------
+| Alamat yang tidak cocok rute mana pun tidak pernah melewati middleware web,
+| sehingga sesi belum dibaca dan auth()->user() bernilai null di halaman 404.
+| Akibatnya petugas yang sedang masuk tetap disuguhi tombol "Masuk dengan NIP"
+| alih-alih jalan pulang ke daftar tugasnya.
+|
+| Verifikasi di situs hidup yang menemukan ini; test feature memberi hijau palsu
+| karena actingAs() menyuntik pengguna langsung ke container dan melewati sesi.
+|
+| Rute ini WAJIB berada di baris terakhir: pencocokan Laravel berurutan, jadi
+| menaruhnya lebih awal akan menelan seluruh rute di bawahnya.
+*/
+Route::fallback(function () {
+    abort(404);
+})->middleware('web');
