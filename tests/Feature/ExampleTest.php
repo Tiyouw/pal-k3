@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Asset;
 use Database\Seeders\AparSeeder;
 use Database\Seeders\MasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,5 +41,40 @@ class ExampleTest extends TestCase
     public function tamu_melihat_tautan_masuk_petugas(): void
     {
         $this->get('/')->assertOk()->assertSee(route('petugas.masuk'), false);
+    }
+
+    /**
+     * Halaman muka terbuka tanpa masuk. Token QR adalah satu-satunya penentu
+     * keaslian pemeriksaan, dan sebaran titik APAR tidak layak diumumkan.
+     */
+    #[Test]
+    public function halaman_muka_tidak_membuka_token_qr_maupun_lokasi_aset(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertDoesNotMatchRegularExpression('/PAL-K3-[0-9a-f]{32}/', $html);
+
+        $rahasia = Asset::all()
+            ->flatMap(fn (Asset $a) => [$a->qr_token, $a->lokasi_teks, $a->lat, $a->lng])
+            ->filter(fn ($nilai) => filled($nilai))
+            ->map(fn ($nilai) => (string) $nilai);
+
+        $this->assertNotEmpty($rahasia, 'Seeder APAR seharusnya mengisi aset untuk diperiksa.');
+
+        foreach ($rahasia as $nilai) {
+            $this->assertStringNotContainsString($nilai, $html);
+        }
+    }
+
+    /** Keluhan pengguna atas versi lama: emoji membuat halaman terasa asal jadi. */
+    #[Test]
+    public function halaman_muka_tanpa_emoji(): void
+    {
+        $html = $this->get('/')->assertOk()->getContent();
+
+        $this->assertDoesNotMatchRegularExpression(
+            '/[\x{1F000}-\x{1FAFF}\x{2600}-\x{27BF}\x{2B00}-\x{2BFF}\x{FE0F}\x{200D}]/u',
+            $html,
+        );
     }
 }
