@@ -8,6 +8,7 @@ use App\Models\User;
 use Database\Seeders\AparSeeder;
 use Database\Seeders\MasterSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -37,6 +38,15 @@ class AlurLapanganTest extends TestCase
         // tidak ikut berubah kalau default factory digeser nanti.
         $this->inspektur = User::factory()->create(['role' => 'inspektur']);
         $this->asset     = Asset::query()->firstOrFail();
+    }
+
+    protected function tearDown(): void
+    {
+        // Waktu uji yang dibekukan di satu test tidak boleh bocor ke test lain
+        // dalam proses yang sama.
+        Carbon::setTestNow();
+
+        parent::tearDown();
     }
 
     #[Test]
@@ -120,6 +130,35 @@ class AlurLapanganTest extends TestCase
 
         $this->actingAs($this->inspektur)->get('/petugas')->assertOk();
         $this->actingAs($this->inspektur)->get('/petugas/riwayat')->assertOk();
+    }
+
+    /**
+     * Urgensi tenggat periode tampil di beranda, bukan cuma di panel admin.
+     *
+     * Tenggat APAR = tanggal 30 (periode 30 hari NFPA 10). Tiga keadaan waktu
+     * diuji: lewat tenggat (merah), mepet tiga hari (kuning), dan waktu cukup
+     * (abu tanpa alarm).
+     */
+    #[Test]
+    public function beranda_menandai_urgensi_tenggat_periode(): void
+    {
+        $this->withoutExceptionHandling();
+
+        Carbon::setTestNow(Carbon::create(2026, 3, 31, 10));
+        $this->actingAs($this->inspektur)->get('/petugas')
+            ->assertOk()
+            ->assertSee('Terlewat 1 hari')
+            ->assertSee('melewati tenggat 30 Mar');
+
+        Carbon::setTestNow(Carbon::create(2026, 3, 28, 10));
+        $this->actingAs($this->inspektur)->get('/petugas')
+            ->assertOk()
+            ->assertSee('Tinggal 3 hari');
+
+        Carbon::setTestNow(Carbon::create(2026, 3, 20, 10));
+        $this->actingAs($this->inspektur)->get('/petugas')
+            ->assertOk()
+            ->assertSee('Tenggat 30 Mar');
     }
 
     /**

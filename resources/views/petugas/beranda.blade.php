@@ -40,7 +40,8 @@
         </div>
 
         <p class="redup" style="margin:10px 0 0">
-            {{ $persen }}% selesai &middot; {{ $inspeksiSaya }} inspeksi oleh Anda bulan ini
+            {{ $persen }}% selesai · {{ $inspeksiSaya }} inspeksi oleh Anda bulan ini
+            · sisa {{ $sisaHari }} hari (tenggat {{ $jatuhTempo->translatedFormat('j M') }})
         </p>
     </div>
 
@@ -63,6 +64,16 @@
         </div>
     @endif
 
+    {{-- Tenggat terlewat lebih mendesak daripada daftar apa pun: satu
+         kalimat merah di atas daftar, bukan angka tersembunyi di panel
+         admin. Arah kerjanya konkret — selesaikan bulan lalu dulu. --}}
+    @if ($terlewat && $belum->isNotEmpty())
+        <div class="pesan p-merah" style="margin-top:12px">
+            <strong>{{ $belum->count() }} APAR melewati tenggat {{ $jatuhTempo->translatedFormat('j M') }}.</strong>
+            Prioritaskan sebelum memulai pekerjaan bulan ini.
+        </div>
+    @endif
+
     {{-- Daftar sisa tugas dikelompokkan per gedung dan lantai supaya petugas
          bisa menyusun rute jalan, bukan berpindah lantai berulang kali. --}}
     <div class="kartu">
@@ -73,22 +84,42 @@
             @endif
         </div>
 
+        @php
+            // Status tenggat sama untuk semua aset pada satu periode bulanan,
+            // tetapi dituliskan di setiap kartu: chip kode telanjang tidak
+            // menjawab "seberapa buruk keadaan ini" bagi petugas yang baru
+            // masuk. Tiga keadaan: terlewat (merah), mepet ≤3 hari (kuning),
+            // atau sekadar menampilkan tanggal tenggat (abu).
+            if ($terlewat) {
+                $lencana = '<span class="lencana l-merah">Terlewat ' . $sisaHari . ' hari</span>';
+            } elseif ($sisaHari <= 3) {
+                $lencana = '<span class="lencana l-kuning">Tinggal ' . $sisaHari . ' hari</span>';
+            } else {
+                $lencana = '<span class="lencana l-abu">Tenggat ' . $jatuhTempo->translatedFormat('j M') . '</span>';
+            }
+        @endphp
+
         @forelse ($belum->groupBy(fn ($a) => trim(($a->gedung ?: 'Lainnya') . ' ' . ($a->labelLantai() ?? ''))) as $grup => $daftar)
             <div style="margin-top:14px">
                 <p style="margin:0 0 6px; font-size:.8rem; font-weight:700; color:var(--abu);
                           text-transform:uppercase; letter-spacing:.4px">
-                    {{ $grup }} &middot; {{ $daftar->count() }}
+                    {{ $grup }} · {{ $daftar->count() }}
                 </p>
-                <div style="display:flex; flex-wrap:wrap; gap:8px">
-                    @foreach ($daftar as $a)
-                        {{-- Kode saja, tanpa tautan: aset TIDAK boleh dibuka dari
-                             daftar. Satu-satunya jalan masuk adalah memindai QR di
-                             lokasi (Bagian 5.2), supaya kehadiran tetap terbukti. --}}
-                        <span class="lencana l-abu mono" style="padding:8px 12px; font-size:.85rem">
-                            {{ $a->kode }}
+                {{-- Kode + lokasi + status tenggat, tanpa tautan: aset TIDAK
+                     boleh dibuka dari daftar. Satu-satunya jalan masuk adalah
+                     memindai QR di lokasi (Bagian 5.2), supaya kehadiran tetap
+                     terbukti. --}}
+                @foreach ($daftar as $a)
+                    <div class="baris" style="min-height:48px; padding:10px 0; border-top:1px solid var(--abu-md)">
+                        <span>
+                            <strong class="mono" style="font-size:.95rem">{{ $a->kode }}</strong>
+                            <span class="redup" style="font-size:.82rem">
+                                {{ $a->lokasi_teks ?: ($a->gedung . ' ' . ($a->labelLantai() ?? '')) }}
+                            </span>
                         </span>
-                    @endforeach
-                </div>
+                        {!! $lencana !!}
+                    </div>
+                @endforeach
             </div>
         @empty
             <div class="pesan p-hijau" style="margin-top:8px">

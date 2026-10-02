@@ -56,6 +56,15 @@ class BerandaController extends Controller
             ->where('inspected_at', '>=', $bulanIni)
             ->count();
 
+        // Tenggat periode dihitung derivatif, bukan dibaca dari tabel schedules:
+        // baris jadwal baru dibuat saat inspeksi difinalkan, jadi aset yang justru
+        // paling perlu ditegur (belum dikunjungi) belum punya baris untuk dibaca.
+        // Rumusnya sama persis dengan Schedule::pastikanAda(), tanpa menulis DB.
+        $periodeHari = $apar?->periode_hari ?? 30;
+        $jatuhTempo  = $bulanIni->copy()->addDays($periodeHari - 1)->endOfDay();
+        $sisaHari    = (int) ceil(now()->diffInDays($jatuhTempo, absolute: true));
+        $terlewat    = $jatuhTempo->isPast();
+
         return view('petugas.beranda', [
             'user'         => $user,
             'belum'        => $belum,
@@ -64,6 +73,9 @@ class BerandaController extends Controller
             'draf'         => $draf,
             'inspeksiSaya' => $inspeksiSaya,
             'bulanLabel'   => $this->namaBulan($bulanIni->month) . ' ' . $bulanIni->year,
+            'jatuhTempo'   => $jatuhTempo,
+            'sisaHari'     => $sisaHari,
+            'terlewat'     => $terlewat,
         ]);
     }
 
