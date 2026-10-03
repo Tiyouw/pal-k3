@@ -69,9 +69,14 @@
         </div>
 
         {{-- Dibatasi setinggi layar di bawah bilah 4rem dan bisa digulir sendiri,
-             supaya tombol masuk di dasarnya terjangkau di ponsel landscape. --}}
-        <div id="menu-ponsel" data-menu-panel hidden class="max-h-[calc(100svh-4rem)] overflow-y-auto overscroll-contain border-t border-bone bg-paper text-charcoal lg:hidden">
-            <nav aria-label="Menu ponsel" class="bingkai pb-6">
+             supaya tombol masuk di dasarnya terjangkau di ponsel landscape.
+             overflow-y:auto ikut memotong outline fokus (2px + offset 3px = 5px)
+             yang keluar dari kotak panel. pt-2 memberi ruang di atas tautan
+             pertama; scroll-py-2 membuat gulir-otomatis saat fokus berhenti 8px
+             sebelum tepi, bukan tepat di tepi elemen. Diukur oleh
+             tests/qa-browser/verifikasi_landing.py. --}}
+        <div id="menu-ponsel" data-menu-panel hidden class="max-h-[calc(100svh-4rem)] scroll-py-2 overflow-y-auto overscroll-contain border-t border-bone bg-paper text-charcoal lg:hidden">
+            <nav aria-label="Menu ponsel" class="bingkai pt-2 pb-6">
                 <ul>
                     @foreach ($tautan as $alamat => $label)
                         <li class="border-b border-bone">
