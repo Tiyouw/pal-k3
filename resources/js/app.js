@@ -1,6 +1,6 @@
 /**
  * Perilaku halaman publik (layouts/situs): nav yang berubah saat digulir, menu
- * ponsel, reveal saat gulir, dan video latar hero.
+ * ponsel, reveal saat gulir, dan video latar hero beserta tombol jedanya.
  *
  * JavaScript vanilla tanpa pustaka animasi. Semua gerak tunduk pada
  * prefers-reduced-motion; gaya reveal sendiri ada di resources/css/app.css.
@@ -92,6 +92,10 @@ function pasangMuncul() {
  * tidak dipasang sama sekali bila pengguna meminta gerak dikurangi atau sedang
  * menghemat data; poster tetap tampil. Layar potret memakai potongan tegak yang
  * jauh lebih kecil. Video dijeda saat hero keluar layar.
+ *
+ * Tombol [data-video-kendali] (WCAG 2.2.2) baru ditampilkan setelah video
+ * benar-benar berputar, jadi tetap tersembunyi selama video tidak dimuat. Video
+ * yang dijeda pengguna tidak diputar ulang otomatis saat hero kembali terlihat.
  */
 function pasangVideoLatar() {
     const video = document.querySelector('[data-video-latar]');
@@ -100,8 +104,14 @@ function pasangVideoLatar() {
     const koneksi = navigator.connection;
     if (koneksi && (koneksi.saveData || /2g$/.test(koneksi.effectiveType ?? ''))) return;
 
+    const tombol = document.querySelector('[data-video-kendali]');
     let siap = document.readyState === 'complete';
     let terlihat = true;
+    let dijedaPengguna = false;
+
+    const tulisTombol = () => {
+        if (tombol) tombol.textContent = dijedaPengguna ? 'Putar video' : 'Jeda video';
+    };
 
     const perbarui = () => {
         if (!siap) return;
@@ -113,10 +123,13 @@ function pasangVideoLatar() {
                 video.removeAttribute('src');
                 video.load();
             }
+            if (tombol) tombol.hidden = true;
+            dijedaPengguna = false;
+            tulisTombol();
             return;
         }
 
-        if (!terlihat) {
+        if (!terlihat || dijedaPengguna) {
             video.pause();
             return;
         }
@@ -127,6 +140,17 @@ function pasangVideoLatar() {
         }
         video.play()?.catch(() => {});
     };
+
+    if (tombol) {
+        video.addEventListener('playing', () => {
+            tombol.hidden = false;
+        });
+        tombol.addEventListener('click', () => {
+            dijedaPengguna = !dijedaPengguna;
+            tulisTombol();
+            perbarui();
+        });
+    }
 
     if (!siap) {
         window.addEventListener(
@@ -151,7 +175,30 @@ function pasangVideoLatar() {
     perbarui();
 }
 
-pasangNav();
-pasangMenu();
-pasangMuncul();
-pasangVideoLatar();
+/*
+ * Tiap pemasang diisolasi: galatnya dicatat ke konsol tanpa menghentikan yang
+ * lain. pasangMuncul paling awal karena hanya dia yang membuka isi yang
+ * disembunyikan kelas js. Tanda siap hanya dipasang bila semua yang ditopang
+ * kelas js (reveal, nav, menu) terpasang; bila ada yang gagal, kelas js
+ * langsung dicabut dan halaman kembali ke tata letak tanpa JavaScript. Bila
+ * modul ini tidak jalan sama sekali, skrip sebaris di layouts/situs yang
+ * mencabutnya setelah ±3 detik.
+ */
+let utuh = true;
+
+function jalankan(nama, pasang, ditopangKelasJs) {
+    try {
+        pasang();
+    } catch (galat) {
+        console.error(`[situs] ${nama} gagal:`, galat);
+        if (ditopangKelasJs) utuh = false;
+    }
+}
+
+jalankan('pasangMuncul', pasangMuncul, true);
+jalankan('pasangNav', pasangNav, true);
+jalankan('pasangMenu', pasangMenu, true);
+jalankan('pasangVideoLatar', pasangVideoLatar, false);
+
+if (utuh) document.documentElement.dataset.situsSiap = '1';
+else document.documentElement.classList.remove('js');

@@ -24,9 +24,21 @@
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('judul', 'Inspeksi K3') &mdash; PT PAL Indonesia</title>
 
-    {{-- Ditandai sebelum CSS dimuat supaya elemen reveal tidak berkedip.
-         Tanpa JavaScript, kelas ini tidak ada dan semua isi langsung tampil. --}}
-    <script>document.documentElement.classList.add('js')</script>
+    {{-- Kelas js dipasang sebelum CSS dimuat supaya elemen reveal tidak
+         berkedip. Kelas ini menyembunyikan isi [data-muncul] sampai app.js
+         membukanya, membuat kepala situs fixed, dan memunculkan tombol menu.
+         Gagal-terbuka: bila app.js tidak menandai siap (data-situs-siap) dalam
+         ±3 detik — gagal dimuat, diblokir, atau pemasangnya melempar galat —
+         kelas dicabut lagi dan halaman kembali ke tata letak tanpa JavaScript:
+         semua isi tampil dan kepala situs ikut tergulir di atas hero. --}}
+    <script>
+        (function (akar) {
+            akar.classList.add('js');
+            setTimeout(function () {
+                if (!akar.dataset.situsSiap) akar.classList.remove('js');
+            }, 3000);
+        })(document.documentElement);
+    </script>
 
     @stack('kepala')
     @vite(['resources/css/app.css', 'resources/js/app.js'])

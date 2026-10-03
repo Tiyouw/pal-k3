@@ -17,7 +17,8 @@
  * Token sistem desain "Arc" — lihat .kiro/steering/design.md (bagian
  * "Penyesuaian untuk pal-k3" mengalahkan referensi di bawahnya). Skala bawaan
  * Tailwind untuk warna, ukuran teks, bobot, radius, dan bayangan dikosongkan
- * supaya hanya nilai sistem yang tersedia sebagai kelas.
+ * supaya hanya nilai sistem yang tersedia sebagai kelas; skala efek
+ * (drop-shadow, blur, inset-shadow, text-shadow) dikosongkan tanpa pengganti.
  */
 @theme {
     /* Warna: monokrom ditambah dua gelap laut. Tanpa aksen kromatik. */
@@ -75,6 +76,12 @@
     /* Satu-satunya bayangan sistem; selebihnya kedalaman datang dari lompatan warna. */
     --shadow-*: initial;
     --shadow-md: rgba(0, 0, 0, 0.05) 0 10px 15px -3px;
+
+    /* Tanpa bayangan jatuh, cahaya, atau blur (design.md: Don't). */
+    --drop-shadow-*: initial;
+    --blur-*: initial;
+    --inset-shadow-*: initial;
+    --text-shadow-*: initial;
 
     /* Tata letak: isi maksimum 1200px (80rem termasuk gutter 2 x 40px). */
     --container-halaman: 80rem;
@@ -220,11 +227,14 @@
 }
 
 /* Selubung gelap di atas foto/video supaya teks putih tetap terbaca:
-   gelap di atas untuk nav, makin pekat ke bawah untuk judul. */
+   gelap di atas untuk nav, makin pekat ke bawah untuk teks. Titik henti dalam
+   rem, bukan persen: teks hero menempel di dasar dengan tinggi tetap, jadi di
+   layar pendek titik persen menaruh label di bagian selubung yang tipis.
+   Diukur terhadap bingkai video hero: teks kecil >= 4,5:1 di semua bingkai. */
 @utility selubung-gelap {
     background-image:
-        linear-gradient(to bottom, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0) 26%),
-        linear-gradient(to top, rgb(3 30 37 / 0.92) 0%, rgb(3 30 37 / 0.5) 42%, rgb(3 30 37 / 0.18) 100%);
+        linear-gradient(to bottom, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0) 14rem),
+        linear-gradient(to top, rgb(3 30 37 / 0.92) 0%, rgb(3 30 37 / 0.65) 22rem, rgb(3 30 37 / 0.55) 34rem, rgb(3 30 37 / 0.3) 100%);
 }
 
 /*

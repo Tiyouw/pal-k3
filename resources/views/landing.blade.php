@@ -68,7 +68,9 @@
             </div>
         </div>
 
-        <div id="menu-ponsel" data-menu-panel hidden class="border-t border-bone bg-paper text-charcoal lg:hidden">
+        {{-- Dibatasi setinggi layar di bawah bilah 4rem dan bisa digulir sendiri,
+             supaya tombol masuk di dasarnya terjangkau di ponsel landscape. --}}
+        <div id="menu-ponsel" data-menu-panel hidden class="max-h-[calc(100svh-4rem)] overflow-y-auto overscroll-contain border-t border-bone bg-paper text-charcoal lg:hidden">
             <nav aria-label="Menu ponsel" class="bingkai pb-6">
                 <ul>
                     @foreach ($tautan as $alamat => $label)
@@ -108,11 +110,11 @@
         </div>
 
         <div class="bingkai pt-36 pb-10 md:pb-14">
-            <p data-masuk style="--urutan: 1" class="label-meta text-paper/80">Divisi K3LH &middot; PT PAL Indonesia</p>
+            <p data-masuk style="--urutan: 1" class="label-meta text-paper">Divisi K3LH &middot; PT PAL Indonesia</p>
             <h1 id="judul-hero" data-masuk style="--urutan: 2" class="mt-5 max-w-[15ch] text-display font-light">
                 Inspeksi APAR yang terbukti dilakukan di tempatnya.
             </h1>
-            <p data-masuk style="--urutan: 3" class="mt-6 max-w-[36rem] text-body-lg text-paper/80">
+            <p data-masuk style="--urutan: 3" class="mt-6 max-w-[36rem] text-body-lg text-paper">
                 Stiker QR, titik lokasi, dan foto bukti menggantikan kartu periksa kertas yang gampang hilang.
             </p>
             <div data-masuk style="--urutan: 4" class="mt-10 flex flex-col gap-3 sm:flex-row">
@@ -120,6 +122,17 @@
                     {{ $masuk ? 'Lanjutkan pekerjaan' : 'Masuk petugas' }}
                 </a>
                 <a href="#cara-kerja" class="tombol tombol-terang px-6 py-[1.125rem]">Cara kerja</a>
+            </div>
+        </div>
+
+        {{-- Kendali video (WCAG 2.2.2), tombol ghost bergaya label. Tersembunyi
+             sampai video benar-benar berputar, jadi tidak tampil tanpa JavaScript,
+             saat gerak dikurangi, atau saat menghemat data. Kotaknya sama dengan
+             tombol hero (teks sebaris). Di bawah 640px berada di pojok kanan atas
+             supaya tidak menutupi tombol utama yang selebar layar. --}}
+        <div class="pointer-events-none absolute inset-x-0 top-18 sm:top-auto sm:bottom-0">
+            <div class="bingkai flex justify-end sm:pb-10 md:pb-14">
+                <button type="button" data-video-kendali hidden class="tautan pointer-events-auto -mr-3 inline-flex items-center rounded-md border border-transparent px-3 py-[1.125rem] text-label font-medium whitespace-nowrap uppercase">Jeda video</button>
             </div>
         </div>
     </section>
@@ -367,7 +380,7 @@
                 <div class="md:col-span-5 md:col-start-8">
                     <p data-muncul class="text-body text-paper/70">
                         Kesehatan dan keselamatan kerja selalu ditekankan dalam sistem manajemen
-                        perusahaan, yang mengacu pada OHSAS 18001 dan Permenaker No. PER.05/MEN/1996.
+                        perusahaan.
                     </p>
                     <a data-muncul href="https://www.pal.co.id/" class="tombol tombol-terang mt-8 px-6 py-[1.125rem]">
                         Situs resmi PT PAL
@@ -386,7 +399,7 @@
                         <dt class="mt-3 text-body-sm text-paper/70">
                             {{ $keterangan }}@if ($rentang), <span class="whitespace-nowrap">{{ $rentang }}</span>@endif
                         </dt>
-                        <dd class="text-display font-light tabular-nums">{{ $angka }}</dd>
+                        <dd class="text-display font-light proportional-nums">{{ $angka }}</dd>
                     </div>
                 @endforeach
             </dl>
