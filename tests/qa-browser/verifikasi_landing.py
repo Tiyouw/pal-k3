@@ -12,6 +12,9 @@ peramban, jadi hanya bisa dibuktikan lewat Chromium sungguhan:
 3. Tombol jeda video (WCAG 2.2.2): klik, Spasi, Enter mengganti video.paused.
 4. prefers-reduced-motion: video tidak dimuat, tombol jeda tersembunyi.
 5. Tak ada gulir horizontal di 360 px dan tak ada galat konsol.
+6. Nav vs hero: nav transparan hanya di puncak; begitu digulir sedikit nav
+   harus solid, supaya teks hero tidak bergulir di bawah nav yang tembus
+   pandang (bug: judul hero menabrak logo dan tombol Masuk).
 
 Halaman publik, jadi tidak perlu login. Sasaran bisa diganti lewat QA_BASIS
 (mis. preview PR). Keluar dengan kode bukan nol bila ada yang gagal.
@@ -190,6 +193,40 @@ def uji_umum(br):
     ctx.close()
 
 
+# Elemen hero yang beririsan dengan kotak nav, dan apakah latar nav transparan.
+JS_NAV_HERO = """() => {
+    const nav = document.querySelector('[data-nav]');
+    const n = nav.getBoundingClientRect();
+    const tabrak = [...document.querySelectorAll('[data-hero] h1, [data-hero] p, [data-hero] a, [data-hero] button')]
+        .filter(e => e.offsetParent !== null)
+        .filter(e => { const r = e.getBoundingClientRect(); return r.top < n.bottom && r.bottom > n.top; })
+        .map(e => e.textContent.trim().slice(0, 20));
+    const bg = getComputedStyle(nav).backgroundColor;
+    const tembus = bg === 'transparent' || /rgba\\(.*,\\s*0\\)$/.test(bg);
+    return {tabrak, tembus};
+}"""
+
+
+def uji_nav_hero(br, ukuran, nama):
+    ctx, hal = halaman(br, viewport=ukuran)
+    buka(hal)
+    hal.wait_for_timeout(600)
+    cek(f"{nama}: nav transparan di puncak hero", hal.evaluate(JS_NAV_HERO)["tembus"])
+    buruk = []
+    for y in (30, 120, 250, 400, 600, 800):
+        hal.evaluate(f"scrollTo(0, {y})")
+        hal.wait_for_timeout(450)  # transisi latar 300ms
+        u = hal.evaluate(JS_NAV_HERO)
+        if u["tembus"]:
+            buruk.append(f"y={y}: nav transparan, beririsan {u['tabrak']}")
+    cek(f"{nama}: digulir sedikit, nav solid dan teks hero tak lewat di bawah nav tembus",
+        not buruk, "; ".join(buruk)[:300])
+    hal.evaluate("scrollTo(0, 0)")
+    hal.wait_for_timeout(450)
+    cek(f"{nama}: kembali ke puncak, nav transparan lagi", hal.evaluate(JS_NAV_HERO)["tembus"])
+    ctx.close()
+
+
 def jalan():
     print(f"Sasaran: {BASIS}", flush=True)
     with sync_playwright() as pw:
@@ -197,6 +234,8 @@ def jalan():
         ctx0.close()
         uji_menu(br, {"width": 390, "height": 844}, "potret 390x844")
         uji_menu(br, {"width": 844, "height": 390}, "landscape 844x390")
+        uji_nav_hero(br, {"width": 390, "height": 844}, "nav ponsel")
+        uji_nav_hero(br, {"width": 1440, "height": 900}, "nav meja")
         uji_video(br)
         uji_gerak_dikurangi(br)
         uji_tanpa_js(br)

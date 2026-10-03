@@ -9,27 +9,34 @@
 const kurangiGerak = window.matchMedia('(prefers-reduced-motion: reduce)');
 const adaPengamat = 'IntersectionObserver' in window;
 
-/** Nav transparan selama hero masih di bawahnya; setelah itu berlatar kertas. */
+/**
+ * Nav transparan hanya saat halaman diam di puncak hero; begitu digulir
+ * sedikit, nav berlatar kertas.
+ *
+ * Versi awal menunggu seluruh hero (setinggi layar) lewat di bawah nav. Karena
+ * nav fixed, selama itu judul, paragraf, dan tombol jeda hero bergulir persis
+ * di bawah logo dan tombol nav yang masih transparan, jadi teksnya bertabrakan.
+ * Sekarang yang diamati penanda [data-nav-penanda] setinggi 8px di puncak hero:
+ * begitu keluar layar, nav menjadi solid.
+ */
 function pasangNav() {
     const nav = document.querySelector('[data-nav]');
     if (!nav) return;
 
-    const hero = document.querySelector('[data-hero]');
+    const penanda = document.querySelector('[data-nav-penanda]');
     const setel = (tergulir) => nav.toggleAttribute('data-tergulir', tergulir);
 
-    if (!hero) {
+    if (!penanda) {
         setel(true);
         return;
     }
 
     if (adaPengamat) {
-        new IntersectionObserver(([entri]) => setel(!entri.isIntersecting), {
-            rootMargin: `-${nav.offsetHeight}px 0px 0px 0px`,
-        }).observe(hero);
+        new IntersectionObserver(([entri]) => setel(!entri.isIntersecting)).observe(penanda);
         return;
     }
 
-    const periksa = () => setel(hero.getBoundingClientRect().bottom <= nav.offsetHeight);
+    const periksa = () => setel(penanda.getBoundingClientRect().bottom <= 0);
     periksa();
     window.addEventListener('scroll', periksa, { passive: true });
 }
