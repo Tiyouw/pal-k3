@@ -95,6 +95,10 @@
 @section('isi')
     {{-- Hero: video latar penuh dengan judul di kiri bawah. --}}
     <section data-hero aria-labelledby="judul-hero" class="relative isolate flex min-h-svh items-end overflow-hidden bg-deep-current text-paper">
+        {{-- Penanda gulir untuk pasangNav (resources/js/app.js): begitu 8px ini
+             keluar layar, nav berubah solid supaya teks hero tidak bergulir di
+             bawah nav yang transparan. --}}
+        <div data-nav-penanda aria-hidden="true" class="pointer-events-none absolute inset-x-0 top-0 h-2"></div>
         <div class="absolute inset-0 -z-10" data-masuk-media>
             <video
                 data-video-latar
