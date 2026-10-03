@@ -27,14 +27,6 @@ class LandingController extends Controller
         'damkar'  => 'Pemeriksaan mobil pemadam kebakaran: mesin, pompa, tangki, dan kelengkapan perlengkapan.',
     ];
 
-    /** Lambang per slug. Slug mobil pemadam adalah damkar, sesuai data induk. */
-    private const IKON = [
-        'apar'    => '🧯',
-        'hydrant' => '🚰',
-        'p3k'     => '🧰',
-        'damkar'  => '🚒',
-    ];
-
     public function index(): View
     {
         $modul = AssetType::query()
@@ -45,7 +37,6 @@ class LandingController extends Controller
                 'nama'     => $t->nama,
                 'periode'  => $this->labelPeriode($t->periode_hari),
                 'ringkas'  => self::RINGKASAN[$t->slug] ?? '',
-                'ikon'     => self::IKON[$t->slug] ?? '🧯',
                 // Modul yang belum punya checklist ditandai sebagai tahap
                 // berikutnya, bukan disembunyikan: pembaca perlu melihat
                 // rencana utuhnya.

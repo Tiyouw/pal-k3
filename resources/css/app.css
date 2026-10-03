@@ -1,9 +1,347 @@
-@import 'tailwindcss';
+@import 'tailwindcss' source(none);
+@import '@fontsource-variable/inter';
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+/*
+ * Sumber kelas ditulis eksplisit supaya hasil build tidak bergantung pada
+ * berkas lain di direktori kerja. welcome.blade.php adalah sisa kerangka yang
+ * tidak dipakai rute mana pun dan membawa palet warnanya sendiri.
+ */
+@source '../views';
+@source '../js';
+@source not '../views/welcome.blade.php';
 
+/* Varian js: berlaku setelah skrip sebaris di layouts/situs menandai <html class="js">. */
+@custom-variant js (&:where(.js, .js *));
+
+/*
+ * Token sistem desain "Arc" — lihat .kiro/steering/design.md (bagian
+ * "Penyesuaian untuk pal-k3" mengalahkan referensi di bawahnya). Skala bawaan
+ * Tailwind untuk warna, ukuran teks, bobot, radius, dan bayangan dikosongkan
+ * supaya hanya nilai sistem yang tersedia sebagai kelas; skala efek
+ * (drop-shadow, blur, inset-shadow, text-shadow) dikosongkan tanpa pengganti.
+ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    /* Warna: monokrom ditambah dua gelap laut. Tanpa aksen kromatik. */
+    --color-*: initial;
+    --color-bone: #e5e7eb;
+    --color-charcoal: #0a0a0a;
+    --color-paper: #ffffff;
+    --color-obsidian: #000000;
+    --color-deep-current: #031e25;
+    --color-slate-depth: #1d1d1e;
+
+    /* Inter menggantikan Soehne, di-host sendiri lewat @fontsource-variable/inter. */
+    --font-sans: 'Inter Variable', Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+    --font-weight-*: initial;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+
+    /* Skala teks. Tracking dalam em; judul besar turun bertahap di ponsel. */
+    --text-*: initial;
+    --text-caption: 0.6875rem; /* 11px — label meta uppercase */
+    --text-caption--line-height: 1.3;
+    --text-caption--letter-spacing: 0.185em;
+    --text-label: 0.75rem; /* 12px — nav, tombol, tautan kaki */
+    --text-label--line-height: 1.3;
+    --text-label--letter-spacing: 0.15em;
+    --text-body-sm: 0.875rem; /* 14px */
+    --text-body-sm--line-height: 1.44;
+    --text-body: 1rem; /* 16px */
+    --text-body--line-height: 1.44;
+    --text-body-lg: 1.125rem; /* 18px */
+    --text-body-lg--line-height: 1.44;
+    --text-body-lg--letter-spacing: -0.01em;
+    --text-subheading: 1.375rem; /* 22px */
+    --text-subheading--line-height: 1.33;
+    --text-subheading--letter-spacing: -0.012em;
+    --text-heading: clamp(1.625rem, 1.3rem + 1.1vw, 2rem); /* 26 → 32px */
+    --text-heading--line-height: 1.3;
+    --text-heading--letter-spacing: -0.016em;
+    --text-heading-lg: clamp(2.125rem, 1.5rem + 2.2vw, 3rem); /* 34 → 48px */
+    --text-heading-lg--line-height: 1.16;
+    --text-heading-lg--letter-spacing: -0.021em;
+    --text-display: clamp(2.75rem, 0.9rem + 5.8vw, 8.75rem); /* 44 → 140px, penuh hanya di layar lebar */
+    --text-display--line-height: 1;
+    --text-display--letter-spacing: -0.043em;
+
+    /* Radius: 2,25px nav, 5px kontrol, 32px gambar, 0 kartu. Tidak pernah 6–31px. */
+    --radius-*: initial;
+    --radius-sm: 2.25px;
+    --radius-md: 5px;
+    --radius-3xl: 32px;
+
+    /* Satu-satunya bayangan sistem; selebihnya kedalaman datang dari lompatan warna. */
+    --shadow-*: initial;
+    --shadow-md: rgba(0, 0, 0, 0.05) 0 10px 15px -3px;
+
+    /* Tanpa bayangan jatuh, cahaya, atau blur (design.md: Don't). */
+    --drop-shadow-*: initial;
+    --blur-*: initial;
+    --inset-shadow-*: initial;
+    --text-shadow-*: initial;
+
+    /* Tata letak: isi maksimum 1200px (80rem termasuk gutter 2 x 40px). */
+    --container-halaman: 80rem;
+    --spacing-pita: clamp(4rem, 2.5rem + 5vw, 6.25rem); /* jarak vertikal pita 64 → 100px */
+
+    /* Gerak: kurva halus tanpa pantulan. */
+    --ease-halus: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+    /*
+     * design.md meminta "ss01" dan "tnum". Pada Inter, tnum ikut melebarkan
+     * tanda hubung, pisah, dan titik (mis. "benar-benar" terbaca "benar - benar"),
+     * jadi tnum dipasang hanya pada angka lewat kelas tabular-nums.
+     */
+    html {
+        font-feature-settings: 'ss01';
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+        background-color: var(--color-paper);
+        color: var(--color-charcoal);
+        font-size: var(--text-body);
+        line-height: var(--text-body--line-height);
+    }
+
+    /* Preflight memakai "bolder" (700); bobot tertinggi sistem ini 600. */
+    b,
+    strong {
+        font-weight: var(--font-weight-semibold);
+    }
+
+    :focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: 3px;
+    }
+
+    ::selection {
+        background-color: var(--color-charcoal);
+        color: var(--color-paper);
+    }
+}
+
+/* Wadah isi halaman: lebar maksimum 1200px dengan gutter 20px / 40px. */
+@utility bingkai {
+    width: 100%;
+    max-width: var(--container-halaman);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+
+    @media (width >= 48rem) {
+        padding-inline: 2.5rem;
+    }
+}
+
+/* Label meta: 11px, 500, uppercase, +0.185em. */
+@utility label-meta {
+    font-size: var(--text-caption);
+    line-height: var(--text-caption--line-height);
+    letter-spacing: var(--text-caption--letter-spacing);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+}
+
+/*
+ * Tombol bergaris: garis 1px, radius 5px, label uppercase 12px. Warna diatur
+ * tombol-terang (di atas latar gelap) atau tombol-gelap (di atas latar terang);
+ * saat diarahkan tombol terisi penuh dengan warna terbalik. Padding diatur di
+ * markup agar ukuran bisa disesuaikan tanpa bentrok urutan kelas.
+ */
+@utility tombol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--radius-md);
+    font-size: var(--text-label);
+    line-height: var(--text-label--line-height);
+    letter-spacing: var(--text-label--letter-spacing);
+    font-weight: var(--font-weight-medium);
+    text-transform: uppercase;
+    white-space: nowrap;
+    transition-property: color, background-color, border-color;
+    transition-duration: 200ms;
+    transition-timing-function: var(--ease-halus);
+}
+
+@utility tombol-terang {
+    color: var(--color-paper);
+    border-color: rgb(255 255 255 / 0.7);
+
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--color-paper);
+            border-color: var(--color-paper);
+            color: var(--color-charcoal);
+        }
+    }
+}
+
+@utility tombol-gelap {
+    color: var(--color-charcoal);
+    border-color: var(--color-charcoal);
+
+    @media (hover: hover) {
+        &:hover {
+            background-color: var(--color-charcoal);
+            border-color: var(--color-charcoal);
+            color: var(--color-paper);
+        }
+    }
+}
+
+/* Tautan nav/kaki: garis bawah tipis muncul halus saat diarahkan. */
+@utility tautan {
+    text-decoration-line: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.5em;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 200ms var(--ease-halus);
+
+    &:focus-visible {
+        text-decoration-color: currentColor;
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            text-decoration-color: currentColor;
+        }
+    }
+}
+
+/* Bingkai foto: radius 32px tanpa garis atau bayangan. clip-path menjaga sudut
+   tetap terpotong saat foto di dalamnya di-zoom (Safari). */
+@utility bingkai-foto {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-3xl);
+    clip-path: inset(0 round var(--radius-3xl));
+}
+
+/* Selubung gelap di atas foto/video supaya teks putih tetap terbaca:
+   gelap di atas untuk nav, makin pekat ke bawah untuk teks. Titik henti dalam
+   rem, bukan persen: teks hero menempel di dasar dengan tinggi tetap, jadi di
+   layar pendek titik persen menaruh label di bagian selubung yang tipis.
+   Diukur terhadap bingkai video hero: teks kecil >= 4,5:1 di semua bingkai. */
+@utility selubung-gelap {
+    background-image:
+        linear-gradient(to bottom, rgb(0 0 0 / 0.5) 0%, rgb(0 0 0 / 0) 14rem),
+        linear-gradient(to top, rgb(3 30 37 / 0.92) 0%, rgb(3 30 37 / 0.65) 22rem, rgb(3 30 37 / 0.55) 34rem, rgb(3 30 37 / 0.3) 100%);
+}
+
+/*
+ * Gerak. Semua di dalam prefers-reduced-motion: no-preference; pengguna yang
+ * meminta gerak dikurangi mendapat halaman diam (tanpa reveal, tanpa zoom),
+ * dan video latar tidak dimuat sama sekali (lihat resources/js/app.js).
+ */
+@keyframes masuk-naik {
+    from {
+        opacity: 0;
+        transform: translateY(1rem);
+    }
+}
+
+@keyframes masuk-pudar {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes zoom-keluar {
+    from {
+        transform: scale(1.06);
+    }
+}
+
+@keyframes zoom-pelan {
+    to {
+        transform: scale(1.07);
+    }
+}
+
+@keyframes turun-masuk {
+    from {
+        opacity: 0;
+        transform: translateY(-0.5rem);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+
+    /* Entrance saat dimuat; urutan diatur lewat --urutan. */
+    [data-masuk] {
+        animation: masuk-naik 700ms var(--ease-halus) both;
+        animation-delay: calc(150ms + var(--urutan, 0) * 110ms);
+    }
+
+    [data-masuk='pudar'] {
+        animation-name: masuk-pudar;
+    }
+
+    [data-masuk-media] {
+        animation: zoom-keluar 2400ms var(--ease-halus) both;
+    }
+
+    /* Reveal saat gulir: hanya bila JS jalan; .muncul dipasang IntersectionObserver. */
+    .js [data-muncul] {
+        opacity: 0;
+        transform: translateY(1.25rem);
+        transition:
+            opacity 650ms var(--ease-halus),
+            transform 650ms var(--ease-halus);
+        transition-delay: calc(var(--urutan, 0) * 90ms);
+    }
+
+    .js [data-muncul].muncul {
+        opacity: 1;
+        transform: none;
+    }
+
+    /* Foto berbingkai menyusut pelan ke ukuran asli saat muncul. */
+    .js [data-muncul] .bingkai-foto > img {
+        transform: scale(1.08);
+        transition: transform 1800ms var(--ease-halus);
+    }
+
+    .js [data-muncul].muncul .bingkai-foto > img {
+        transform: none;
+    }
+
+    /* Foto latar lebar: zoom sangat pelan, bolak-balik. */
+    [data-zoom-pelan] {
+        animation: zoom-pelan 24s ease-in-out infinite alternate;
+    }
+
+    [data-menu-panel]:not([hidden]) {
+        animation: turun-masuk 200ms var(--ease-halus);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+@media print {
+    .js [data-muncul] {
+        opacity: 1 !important;
+        transform: none !important;
+    }
 }
