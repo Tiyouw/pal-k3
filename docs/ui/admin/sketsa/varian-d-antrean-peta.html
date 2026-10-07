@@ -1,0 +1,215 @@
+<!doctype html>
+<!-- VARIAN D · ANTREAN + PETA MINI. Kerangka C (antrean keputusan dulu) ditambah peta mini
+     dari B di kolom kanan, plus ilustrasi APAR di butir temuan supaya masalah terbaca sekilas.
+     Klik titik peta = sorot unit di antrean/tabel. -->
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Varian D · Antrean + Peta Mini — Inspeksi K3 APAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--biru:#0f3c68;--biru-tua:#0a2a49;--biru-l:#e8f1f9;--kanvas:#f4f5f7;--teks:#16191d;--redup:#5c636a;--garis:#e3e6ea;
+--hijau:#157347;--hijau-l:#e6f4ec;--kuning:#8a5a00;--kuning-l:#fff3d1;--merah:#b02a37;--merah-l:#fbeaec;--abu:#4b535b;--abu-l:#eceef1}
+body{font:14px/1.5 Inter,system-ui,sans-serif;background:var(--kanvas);color:var(--teks);-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+:focus-visible{outline:3px solid #f5b700;outline-offset:2px;border-radius:8px}
+.app{display:grid;grid-template-columns:236px 1fr;min-height:100vh}
+.sb{background:#fff;border-right:1px solid var(--garis);padding:20px 14px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:4px}
+.merek{display:flex;gap:10px;align-items:center;padding:0 8px 16px}
+.merek i{width:34px;height:34px;border-radius:10px;background:var(--biru);display:grid;place-items:center;color:#fff}
+.merek b{display:block;font-size:14.5px}.merek small{color:var(--redup);font-size:11.5px}
+.grp{font-size:11px;letter-spacing:.1em;color:var(--redup);padding:12px 10px 4px;font-weight:600}
+.sb a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:#2f363d;text-decoration:none;font-weight:500}
+.sb a:hover{background:var(--kanvas)}.sb a.aktif{background:var(--biru-l);color:var(--biru);font-weight:700}
+.sb a .n{margin-left:auto;font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px;background:var(--abu-l);color:var(--abu)}
+.sb a .n.m{background:var(--merah);color:#fff}
+.ro .induk{display:none}
+.profil{margin-top:auto;display:flex;gap:10px;align-items:center;padding:12px 8px;border-top:1px solid var(--garis)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--biru-l);color:var(--biru);display:grid;place-items:center;font-weight:800;font-size:12px}
+.profil b{display:block;font-size:13px}.profil small{color:var(--redup);font-size:11.5px}
+main{padding:22px 26px 40px;min-width:0}
+.head{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.head .ttl{margin-right:auto;max-width:640px}.head small{color:var(--redup);font-weight:500}
+.head h1{font-size:21px;font-weight:800;margin-top:2px;letter-spacing:-.01em}
+.head p{color:#3a4148;margin-top:4px}
+.seg{display:flex;background:#fff;border:1px solid var(--garis);border-radius:99px;padding:3px}
+.seg button{padding:7px 14px;border-radius:99px;font-weight:600;font-size:13px;color:var(--redup)}
+.seg button[aria-pressed=true]{background:var(--biru);color:#fff}
+.menu-btn{display:none;width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--garis)}
+.pita{display:none;margin-top:14px;background:var(--biru-l);color:var(--biru);border-radius:12px;padding:10px 14px;font-weight:600}
+.ro .pita{display:block}
+.grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:18px;margin-top:18px;align-items:start}
+.kol{display:grid;gap:18px;min-width:0}
+.c{background:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 30px rgba(0,0,0,.04);min-width:0}
+.c h2{font-size:15.5px;font-weight:700;display:flex;align-items:center;gap:8px}.c h2 .kanan{margin-left:auto}
+.tabs{display:flex;gap:6px;margin-top:14px;overflow-x:auto;padding-bottom:2px}
+.tabs button{flex:none;padding:8px 14px;border-radius:99px;background:var(--kanvas);font-weight:600;font-size:13px;color:#3a4148;display:flex;gap:7px;align-items:center}
+.tabs button[aria-selected=true]{background:var(--biru);color:#fff}
+.tabs .n{font-size:11px;font-weight:800;padding:0 7px;border-radius:99px;background:#fff;color:var(--teks)}
+.item{display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid #f0f1f3;transition:opacity .3s,transform .3s}
+.item.pergi{opacity:0;transform:translateX(30px)}
+.thumb{width:56px;height:56px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:13px}
+.item b{font-size:14px}.item p{font-size:13px;color:#3a4148}.item small{color:var(--redup);font-size:12px}
+.aksi{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.b{padding:8px 13px;border-radius:99px;font-weight:600;font-size:12.5px;background:var(--kanvas);white-space:nowrap}.b:hover{background:#e6e9ed}
+.b.u{background:var(--biru);color:#fff}.b.u:hover{background:var(--biru-tua)}
+.kosong{padding:30px 0;text-align:center;color:var(--redup)}
+.tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap;display:inline-block}
+.t-merah{background:var(--merah-l);color:var(--merah)}.t-kuning{background:var(--kuning-l);color:var(--kuning)}.t-hijau{background:var(--hijau-l);color:var(--hijau)}.t-biru{background:var(--biru-l);color:var(--biru)}.t-abu{background:var(--abu-l);color:var(--abu)}
+.gelap{background:var(--biru-tua);color:#fff}.gelap h2{color:#fff}
+.besar{font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-top:8px}
+.gelap .sub{color:#b9cbe0;font-size:13px}
+.ar{margin-top:14px;display:grid;gap:9px}.ar div{font-size:12.5px}.ar span{display:flex;justify-content:space-between;color:#d7e3f0}
+.br{height:7px;border-radius:99px;background:#ffffff22;margin-top:4px;overflow:hidden}.br i{display:block;height:100%;background:#f5b700;border-radius:99px}
+.lap li{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f0f1f3}
+.lap small{display:block;color:var(--redup);font-size:12px}
+.pt div{display:grid;grid-template-columns:90px 1fr 26px;gap:8px;align-items:center;font-size:13px;padding:5px 0}
+.pt .br{background:var(--kanvas);margin:0}.pt .br i{background:var(--biru)}
+.cari{display:flex;gap:8px;align-items:center;background:var(--kanvas);border-radius:99px;padding:8px 14px;color:var(--redup);margin-left:auto}
+.cari input{border:0;outline:0;background:none;font:inherit;width:190px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+th{text-align:left;font-size:11.5px;color:var(--redup);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--garis)}
+td{padding:9px 6px;border-bottom:1px solid #f0f1f3}tr:hover td{background:#fafbfc}
+.mgr{display:none}.ro .mgr{display:block}.ro .adm{display:none}
+.ringkas p{font-size:14.5px;line-height:1.65;color:#2f363d;margin-top:10px}
+.tiga{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+.tiga div{background:var(--kanvas);border-radius:16px;padding:14px}.tiga b{font-size:28px;font-weight:800;display:block}.tiga small{color:var(--redup)}
+.toast{position:fixed;bottom:22px;left:50%;transform:translate(-50%,120px);background:var(--teks);color:#fff;padding:11px 18px;border-radius:99px;font-weight:600;transition:transform .25s,visibility .25s;z-index:30;visibility:hidden}
+.toast.tampil{transform:translate(-50%,0);visibility:visible}
+td{white-space:nowrap}td[data-l=Lokasi]{white-space:normal}
+.ar span{color:#e6eef7}.gelap .sub{color:#d0deec}
+/* peta mini */
+.peta{background:var(--biru-tua);color:#fff}.peta h2{color:#fff}
+.peta .kv{margin-top:12px;border-radius:14px;background:#0d3157 radial-gradient(#ffffff12 1px,transparent 1px) 0 0/16px 16px;overflow:hidden}
+.peta svg{display:block;width:100%;height:auto}
+.peta .ttk{cursor:pointer}.peta .ttk:focus-visible .inti,.peta .ttk.pilih .inti{stroke:#fff;stroke-width:3}
+.peta .lgd{display:flex;flex-wrap:wrap;gap:10px;font-size:11.5px;color:#d0deec;margin-top:10px}.peta .lgd svg{display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:4px}
+.peta .info{margin-top:10px;background:#ffffff12;border-radius:12px;padding:10px 12px;font-size:12.5px;min-height:54px}
+.peta .info small{display:block;color:#d0deec}
+.thumb svg{display:block}
+.item.sorot{background:#fff8e1;border-radius:12px}
+tr.sorot td{background:#fff8e1}
+@media (max-width:1100px){.grid{grid-template-columns:1fr}}
+@media (max-width:900px){.app{grid-template-columns:1fr}.sb{position:fixed;inset:0 auto 0 0;width:264px;z-index:20;transform:translateX(-100%);transition:transform .25s}
+ .buka .sb{transform:none;box-shadow:0 0 0 100vmax #0006}.menu-btn{display:grid;place-items:center}main{padding:16px 14px 40px}.head h1{font-size:18px}
+ .item{grid-template-columns:44px 1fr}.thumb{width:44px;height:44px;border-radius:12px}.aksi{grid-column:1/-1;justify-content:flex-start}
+ .tiga{grid-template-columns:1fr}.cari{margin:10px 0 0;width:100%}.cari input{width:100%}
+ table thead{display:none}table,tbody,tr,td{display:block}tr{border:1px solid var(--garis);border-radius:14px;padding:8px 12px;margin-bottom:8px}td{border:0;padding:3px 0}
+ td[data-l]::before{content:attr(data-l) " · ";color:var(--redup);font-size:12px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body><div class="app" id="app">
+<aside class="sb" aria-label="Navigasi utama">
+  <div class="merek"><i aria-hidden="true"><svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M9 2h6v3h-1v2.1A6 6 0 0 1 18 13v7a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-7a6 6 0 0 1 4-5.9V5H9z"/></svg></i><div><b>Inspeksi K3 APAR</b><small>PT PAL Indonesia</small></div></div>
+  <a href="#" class="aktif" aria-current="page">Dasbor</a>
+  <p class="grp">KEGIATAN</p>
+  <a href="#">Inspeksi <span class="n">22</span></a><a href="#">Temuan <span class="n m">2</span></a><a href="#">Lembar Stiker QR</a><a href="#">Laporan Bulanan</a>
+  <div class="induk"><p class="grp">DATA INDUK</p>
+  <a href="#">Aset <span class="n">35</span></a><a href="#">Tipe Objek</a><a href="#">Grup Checklist</a><a href="#">Butir Checklist</a><a href="#">Divisi</a></div>
+  <div class="profil"><span class="av" id="av">AK</span><div><b id="nm">Admin K3</b><small id="rl">Manajemen Aset & K3LH</small></div></div>
+</aside>
+<main>
+  <div class="head">
+    <button class="menu-btn" aria-label="Buka menu" onclick="app.classList.toggle('buka')">☰</button>
+    <div class="ttl"><small>Minggu, 4 Oktober 2026 · Periode Oktober</small>
+      <h1 class="adm"><span id="jml">3</span> keputusan menunggu Anda</h1><h1 class="mgr">Status APAR bulan ini: perlu perhatian</h1>
+      <p>Kepatuhan 62,9%. Masih 13 unit lagi sebelum tenggat 30 Okt (sisa 26 hari).</p></div>
+    <div class="seg" role="group" aria-label="Lihat sebagai"><button aria-pressed="true" data-peran="admin">Admin</button><button aria-pressed="false" data-peran="pemantau">Pemantau</button></div>
+  </div>
+  <p class="pita" role="status">Mode baca saja · tampilan ringkas untuk manajemen. Data induk disembunyikan.</p>
+
+  <div class="grid">
+    <div class="kol">
+      <section class="c adm" aria-labelledby="h-antre"><h2 id="h-antre">Antrean keputusan</h2>
+        <div class="tabs" role="tablist" aria-label="Jenis antrean" id="tabs"></div>
+        <div id="daftar" role="tabpanel"></div></section>
+
+      <section class="c mgr ringkas" aria-labelledby="h-mgr"><h2 id="h-mgr">Ringkasan untuk manajemen</h2>
+        <p>22 dari 35 APAR sudah diperiksa bulan ini. Empat unit dinyatakan tidak layak, dua di antaranya temuan berat yang membuat unit turun dari layanan sampai diganti.</p>
+        <p>Satu temuan (06D, segel putus) sudah melewati target perbaikan 1 Oktober. Tiga inspeksi masih ditinjau karena bukti GPS kurang meyakinkan.</p>
+        <div class="tiga"><div><b>62,9%</b><small>kepatuhan</small></div><div><b>4</b><small>unit tidak layak</small></div><div><b>1</b><small>lewat tenggat</small></div></div>
+        <h2 style="margin-top:20px;font-size:14px">Risiko terbuka</h2><div id="risiko"></div></section>
+
+      <section class="c" aria-labelledby="h-tab"><h2 id="h-tab">Semua inspeksi Oktober <label class="cari kanan"><span aria-hidden="true">⌕</span><input id="cari" placeholder="Cari kode atau petugas" aria-label="Cari inspeksi"></label></h2>
+        <table><thead><tr><th>Unit</th><th>Lokasi</th><th>Petugas</th><th>Waktu</th><th>Gerbang</th><th>Kesimpulan</th></tr></thead><tbody id="tb"></tbody></table></section>
+    </div>
+    <div class="kol" id="kanan">
+      <section class="c gelap" aria-labelledby="h-kp"><h2 id="h-kp">Kepatuhan Oktober</h2><p class="besar">62,9%</p><p class="sub">22 dari 35 unit · sisa 26 hari</p><div class="ar" id="ar"></div></section>
+      <section class="c peta" aria-labelledby="h-pt2"><h2 id="h-pt2">Peta APAR <span class="kanan tag" style="background:#ffffff1a;color:#fff">35 titik</span></h2>
+        <div class="kv"><svg id="mini" viewBox="0 0 400 300" role="group" aria-label="Peta mini 35 APAR"></svg></div>
+        <div class="lgd" id="mlgd"></div>
+        <div class="info" id="minfo" aria-live="polite"><small>Klik titik untuk melihat unit</small>Titik bermasalah ditandai bentuk berbeda.</div></section>
+      <section class="c" id="lapor" aria-labelledby="h-lp"><h2 id="h-lp">Laporan siap cetak</h2><ul class="lap">
+        <li><div><b>Laporan PMS bulanan</b><small>Matriks ✓ X O Ø · Oktober 2026</small></div><button class="b u">Unduh PDF</button></li>
+        <li><div><b>Rekap temuan</b><small>4 temuan · 1 lewat tenggat</small></div><button class="b">Unduh</button></li>
+        <li><div><b>Kartu riwayat per unit</b><small>Pengganti kartu gantung, 35 unit</small></div><button class="b">Pilih unit</button></li></ul></section>
+      <section class="c adm" aria-labelledby="h-pt"><h2 id="h-pt">Aktivitas petugas <span class="kanan tag t-abu">minggu ini</span></h2><div class="pt" id="pt" style="margin-top:10px"></div></section>
+    </div>
+  </div>
+</main></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="../data.js"></script>
+<script src="../apar.js"></script>
+<script>
+const $=s=>document.querySelector(s),U=k=>UNITS.find(u=>u.kode===k);
+// antrean per jenis
+const Q={
+ tinjau:{l:'Perlu tinjauan posisi',it:Object.keys(GERBANG).map(k=>({u:U(k),tag:['t-biru',LABEL_GERBANG[GERBANG[k][0]]],ket:GERBANG[k][1],aksi:[['Terima posisi','terima'],['Tolak & minta ulang','tolak']]}))},
+ berat:{l:'Temuan berat',it:BERAT.map(k=>({u:U(k),tag:['t-merah','Berat'],ket:U(k).masalah,aksi:[['Tetapkan tenggat','tenggat'],['Lihat foto','lihat']]}))},
+ lewat:{l:'Lewat tenggat',it:LEWAT.map(k=>({u:U(k),tag:['t-merah','Lewat 3 hari'],ket:U(k).masalah+' · target 1 Okt',aksi:[['Perpanjang','tenggat'],['Tandai selesai','selesai']]}))},
+ belum:{l:'Belum diperiksa',it:UNITS.filter(u=>u.belum).map(u=>({u,tag:['t-abu','Belum'],ket:`${u.tipe} ${u.kg} kg · radius ${u.radius} m`,aksi:[['Ingatkan petugas','ingat']]}))}};
+let tab='berat'; // temuan berat dibuka dulu: risiko keselamatan di atas soal bukti posisi
+const warnaThumb={'t-biru':'var(--biru-l);color:var(--biru)','t-merah':'var(--merah-l);color:var(--merah)','t-abu':'var(--abu-l);color:var(--abu)'};
+function tabs(){$('#tabs').innerHTML=Object.entries(Q).map(([k,q])=>`<button role="tab" aria-selected="${k===tab}" data-t="${k}">${q.l}<span class="n">${q.it.length}</span></button>`).join('');
+ $('#jml').textContent=Q.tinjau.it.length+Q.berat.it.length+Q.lewat.it.length}
+// butir temuan memakai ilustrasi APAR yang "menceritakan" masalahnya; antrean lain tetap kode unit
+const thumb=x=>x.tag[0]==='t-merah'?`<span class="thumb" style="background:var(--merah-l)">${aparSVG({...aparUntuk(x.u),w:30})}</span>`:`<span class="thumb" style="background:${warnaThumb[x.tag[0]]}">${x.u.kode}</span>`;
+function daftar(){const it=Q[tab].it;$('#daftar').innerHTML=it.length?it.map((x,i)=>`<div class="item" data-i="${i}" data-k="${x.u.kode}">${thumb(x)}
+ <div><b>${x.u.kode} · ${esc(x.u.area)}</b> <span class="tag ${x.tag[0]}">${x.tag[1]}</span><p>${esc(x.ket)}</p><small>${esc(x.u.lokasi)}${x.u.petugas?` · ${x.u.petugas} · ${x.u.waktu}`:''}</small></div>
+ <div class="aksi">${x.aksi.map(([l,a],j)=>`<button class="b ${j===0?'u':''}" data-a="${a}" data-i="${i}">${l}</button>`).join('')}</div></div>`).join(''):'<p class="kosong">Antrean ini kosong. Tidak ada yang perlu diputuskan.</p>'}
+$('#tabs').onclick=e=>{const b=e.target.closest('[role=tab]');if(!b)return;tab=b.dataset.t;tabs();daftar()};
+$('#tabs').onkeydown=e=>{if(!['ArrowRight','ArrowLeft'].includes(e.key))return;const ks=Object.keys(Q),i=ks.indexOf(tab);tab=ks[(i+(e.key==='ArrowRight'?1:-1)+ks.length)%ks.length];tabs();daftar();$(`[data-t=${tab}]`).focus()};
+const PESAN={terima:k=>`Posisi inspeksi ${k} diterima`,tolak:k=>`${k} dikembalikan ke petugas untuk diulang`,tenggat:k=>`Tenggat ${k} ditetapkan 11 Okt`,selesai:k=>`Temuan ${k} ditandai selesai`,ingat:k=>`Pengingat ${k} dikirim ke petugas`,lihat:k=>`Membuka foto ${k}`};
+let tt;function toast(m){$('#toast').textContent=m;$('#toast').classList.add('tampil');clearTimeout(tt);tt=setTimeout(()=>$('#toast').classList.remove('tampil'),2200)}
+$('#daftar').onclick=e=>{const b=e.target.closest('[data-a]');if(!b)return;const i=+b.dataset.i,x=Q[tab].it[i],a=b.dataset.a;toast(PESAN[a](x.u.kode));
+ if(a==='lihat')return;b.closest('.item').classList.add('pergi');setTimeout(()=>{Q[tab].it.splice(i,1);tabs();daftar()},300)};
+// kanan
+$('#ar').innerHTML=AREA.map(a=>{const r=perArea(a);return `<div><span>${a}<b>${r.sudah}/${r.total}</b></span><div class="br"><i style="width:${r.sudah/r.total*100}%"></i></div></div>`}).join('');
+const ptg={};UNITS.filter(u=>u.petugas).forEach(u=>ptg[u.petugas]=(ptg[u.petugas]||0)+1);
+$('#pt').innerHTML=Object.entries(ptg).sort().map(([n,v])=>`<div><span>${n}</span><span class="br"><i style="width:${v/6*100}%"></i></span><b>${v}</b></div>`).join('');
+$('#risiko').innerHTML=UNITS.filter(u=>u.kes==='tidak_layak').map(u=>`<div class="item" style="grid-template-columns:44px 1fr"><span class="thumb" style="width:44px;height:44px;background:var(--merah-l);color:var(--merah)">${u.kode}</span><div><b>${u.kode} · ${esc(u.area)}</b> <span class="tag ${BERAT.includes(u.kode)?'t-merah':'t-kuning'}">${BERAT.includes(u.kode)?'Berat':LEWAT.includes(u.kode)?'Lewat tenggat':'Sedang'}</span><p>${esc(u.masalah)}</p></div></div>`).join('');
+// tabel
+const tG={lolos:'t-hijau',perlu_review:'t-kuning',gps_lemah:'t-kuning',tanpa_gps:'t-abu'},tK={layak:'t-hijau',layak_catatan:'t-kuning',tidak_layak:'t-merah'};
+function tabel(){const q=$('#cari').value.toLowerCase();$('#tb').innerHTML=UNITS.filter(u=>!u.belum&&(!q||[u.kode,u.area,u.lokasi,u.petugas].join(' ').toLowerCase().includes(q))).slice(0,10).map(u=>`<tr data-k="${u.kode}"><td><b>${u.kode}</b></td><td data-l="Lokasi">${esc(u.area)} · ${esc(u.lokasi)}</td><td data-l="Petugas">${u.petugas}</td><td data-l="Waktu">${u.waktu}</td><td><span class="tag ${tG[u.gerbang]}">${LABEL_GERBANG[u.gerbang]}</span></td><td><span class="tag ${tK[u.kes]}">${LABEL_KES[u.kes]}</span></td></tr>`).join('')||'<tr><td colspan="6" class="kosong">Tidak ada inspeksi yang cocok.</td></tr>'}
+$('#cari').oninput=tabel;
+// peran: Pemantau mengubah urutan kartu, laporan naik ke atas
+document.querySelectorAll('[data-peran]').forEach(b=>b.onclick=()=>{const ro=b.dataset.peran==='pemantau';document.body.classList.toggle('ro',ro);document.querySelectorAll('[data-peran]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+ const k=$('#kanan');ro?k.prepend($('#lapor')):k.children[0].after($('#lapor'));$('#nm').textContent=ro?'Pemantau':'Admin K3';$('#av').textContent=ro?'PM':'AK';$('#rl').textContent=ro?'Teknologi Informasi':'Manajemen Aset & K3LH'});
+// peta mini: proyeksi lat/lng seed; tiga lantai Gedung PIP bertumpuk, digeser horizontal kecil
+const st=u=>u.belum?'belum':u.gerbang!=='lolos'?'tinjau':u.kes;
+const NAMA={layak:'Layak',layak_catatan:'Catatan',tidak_layak:'Tidak layak',tinjau:'Tinjau GPS',belum:'Belum'};
+function bentuk(s,r){if(s==='tidak_layak')return `<rect class="inti" x="${-r}" y="${-r}" width="${2*r}" height="${2*r}" rx="1.5" fill="#ff6b78" transform="rotate(45)"/>`;
+ if(s==='tinjau')return `<circle class="inti" r="${r}" fill="#8fb8ff"/><circle r="${r+4}" fill="none" stroke="#8fb8ff" stroke-width="1.3" stroke-dasharray="2.5 2.5"/>`;
+ if(s==='belum')return `<circle class="inti" r="${r-1}" fill="#0d3157" stroke="#e6eef7" stroke-width="1.8"/>`;
+ return `<circle class="inti" r="${r}" fill="${s==='layak'?'#3ccf86':'#f5b700'}"/>`}
+const la=UNITS.map(u=>u.lat),ln=UNITS.map(u=>u.lng),[a0,a1,o0,o1]=[Math.min(...la),Math.max(...la),Math.min(...ln),Math.max(...ln)];
+const MX=g=>40+(g-o0)/(o1-o0)*320,MY=t=>34+(a1-t)/(a1-a0)*236,GES={'Lt. 1':-15,'Lt. 2':0,'Lt. 3':15};
+let pilih=null;
+function mini(){let s=`<text x="${MX(113.706195)-24}" y="${MY(-8.186185)-16}" fill="#d0deec" font-size="11" font-weight="600">Gedung PIP · Lt.1 | 2 | 3</text>
+ <text x="${MX(113.706059)-10}" y="${MY(-8.185754)-14}" fill="#d0deec" font-size="11" font-weight="600">Workshop Fabrikasi</text>
+ <text x="${MX(113.705923)-10}" y="${MY(-8.186634)+24}" fill="#d0deec" font-size="11" font-weight="600">Area Terbuka</text>`;
+ UNITS.forEach(u=>{const dx=u.gedung==='Gedung PIP'?GES[u.lantai]:0;
+  s+=`<g class="ttk ${u.kode===pilih?'pilih':''}" tabindex="0" role="button" data-k="${u.kode}" aria-label="${u.kode}, ${esc(u.area)}: ${NAMA[st(u)]}" transform="translate(${MX(u.lng)+dx},${MY(u.lat)})">${bentuk(st(u),5.5)}</g>`});
+ $('#mini').innerHTML=s}
+$('#mlgd').innerHTML=Object.keys(NAMA).map(k=>`<span><svg viewBox="-9 -9 18 18">${bentuk(k,5)}</svg>${NAMA[k]}</span>`).join('');
+function pilihUnit(k){pilih=k;mini();const u=U(k);
+ $('#minfo').innerHTML=`<small>${esc(u.area)} · ${esc(u.lokasi)}</small><b>${u.kode}</b> · ${NAMA[st(u)]}${u.masalah?` · ${esc(u.masalah)}`:''}${u.gerbangKet?` · ${esc(u.gerbangKet)}`:''}`;
+ // sorot butir yang sama di antrean dan tabel kalau ada
+ document.querySelectorAll('.sorot').forEach(e=>e.classList.remove('sorot'));
+ const jenis=Object.keys(Q).find(j=>Q[j].it.some(x=>x.u.kode===k));
+ if(jenis&&!document.body.classList.contains('ro')){tab=jenis;tabs();daftar();document.querySelector(`.item[data-k="${k}"]`)?.classList.add('sorot')}
+ document.querySelector(`#tb tr[data-k="${k}"]`)?.classList.add('sorot');
+ document.querySelector(`#mini .ttk[data-k="${k}"]`)?.focus()}
+$('#mini').onclick=e=>{const g=e.target.closest('.ttk');g&&pilihUnit(g.dataset.k)};
+$('#mini').onkeydown=e=>{const g=e.target.closest('.ttk');if(g&&(e.key==='Enter'||e.key===' ')){e.preventDefault();pilihUnit(g.dataset.k)}};
+tabs();daftar();tabel();mini();
+</script></body></html>
