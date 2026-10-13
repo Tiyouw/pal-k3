@@ -18,6 +18,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#031e25">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('geofencing.svg') }}">
     <meta name="description" content="@yield('deskripsi', 'Sistem inspeksi K3 Divisi K3LH PT PAL Indonesia.')">
     {{-- Halaman publik tidak boleh terindeks: isinya keterangan internal
          perusahaan, meski tanpa angka aset. --}}

@@ -9,7 +9,7 @@
     public/media/pal (lihat SUMBER.md di sana).
 --}}
 
-@section('judul', 'Sistem Inspeksi K3')
+@section('judul', 'Geofencing — Sistem Inspeksi K3')
 @section('deskripsi', 'Sistem informasi inspeksi sarana proteksi kebakaran dan pertolongan pertama Divisi K3LH PT PAL Indonesia.')
 
 @php
@@ -33,8 +33,8 @@
         class="group absolute inset-x-0 top-0 z-50 border-b border-transparent text-paper transition-[background-color,color,border-color] duration-300 ease-halus js:fixed data-tergulir:border-bone data-tergulir:bg-paper data-tergulir:text-charcoal data-menu-terbuka:border-bone data-menu-terbuka:bg-paper data-menu-terbuka:text-charcoal"
     >
         <div class="bingkai flex h-16 items-center justify-between gap-4 lg:h-18">
-            <a href="{{ route('landing') }}" class="text-heading leading-none font-light tracking-[-0.021em]" aria-label="Inspeksi K3 APAR, halaman depan">
-                inspeksi k3
+            <a href="{{ route('landing') }}" class="shrink-0" aria-label="Geofencing, halaman depan">
+                <x-situs.logo />
             </a>
 
             <nav aria-label="Utama" class="hidden lg:block">
@@ -421,7 +421,7 @@
         <div class="bingkai py-12 md:py-16">
             <div class="flex flex-col gap-10 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <p class="text-heading leading-none font-light tracking-[-0.021em]">inspeksi k3</p>
+                    <x-situs.logo />
                     <p class="mt-4 max-w-[28rem] text-body-sm text-charcoal/70">
                         Divisi K3LH &mdash; PT PAL Indonesia (Persero), Surabaya.
                         Akses terbatas bagi petugas berwenang.
