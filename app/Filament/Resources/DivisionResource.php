@@ -4,15 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\DivisionResource\Pages;
-use App\Filament\Resources\DivisionResource\RelationManagers;
 use App\Models\Division;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class DivisionResource extends Resource
 {
@@ -20,7 +17,7 @@ class DivisionResource extends Resource
 
     protected static ?string $model = Division::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
     // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
     // sehingga sidebar dan judul tab berbunyi "Division".

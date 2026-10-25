@@ -200,7 +200,7 @@ class RedesainPanelTest extends TestCase
         $inspection = $this->inspeksi($asset, ['gate_status' => 'tanpa_gps']);
         $issue = Issue::create(['asset_id' => $asset->id, 'item' => 'Segel rusak', 'severity' => 'berat', 'status' => 'terbuka']);
         $this->panel(User::factory()->pemantau()->create());
-        $this->get('/admin')->assertOk()->assertSee('AKSES PEMANTAU')->assertDontSee('Tetapkan tenggat')->assertDontSee('Data Induk');
+        $this->get('/admin')->assertOk()->assertSee('Akses hanya baca')->assertDontSee('Tetapkan tenggat')->assertDontSee('Data Induk');
         Livewire::test(Dasbor::class)->call('mountAction', 'tinjau', ['id' => $inspection->id])->call('callMountedAction');
         Livewire::test(Dasbor::class)->call('mountAction', 'tenggat', ['id' => $issue->id])->call('callMountedAction');
         Livewire::test(Dasbor::class)->call('mountAction', 'selesai', ['id' => $issue->id])->call('callMountedAction');

@@ -4,15 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\IssueResource\Pages;
-use App\Filament\Resources\IssueResource\RelationManagers;
 use App\Models\Issue;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class IssueResource extends Resource
 {
@@ -20,7 +17,7 @@ class IssueResource extends Resource
 
     protected static ?string $model = Issue::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
 
     // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
     // sehingga sidebar dan judul tab berbunyi "Issue".

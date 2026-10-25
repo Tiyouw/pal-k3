@@ -4,15 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\AssetTypeResource\Pages;
-use App\Filament\Resources\AssetTypeResource\RelationManagers;
 use App\Models\AssetType;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AssetTypeResource extends Resource
 {
@@ -20,7 +17,7 @@ class AssetTypeResource extends Resource
 
     protected static ?string $model = AssetType::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
 
     // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
     // sehingga sidebar dan judul tab berbunyi "AssetType".

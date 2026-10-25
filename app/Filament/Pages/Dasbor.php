@@ -27,7 +27,9 @@ class Dasbor extends Dashboard
 
     public function getSubheading(): string
     {
-        return now()->translatedFormat('l, d F Y').' · Periode '.now()->translatedFormat('F Y');
+        $tanggal = now()->translatedFormat('l, d F Y').' · Periode '.now()->translatedFormat('F Y');
+
+        return auth()->user()->isPemantau() ? $tanggal.' · Akses hanya baca' : $tanggal;
     }
 
     protected function getHeaderActions(): array

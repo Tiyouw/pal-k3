@@ -4,15 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HanyaAdminBolehMenulis;
 use App\Filament\Resources\ChecklistItemResource\Pages;
-use App\Filament\Resources\ChecklistItemResource\RelationManagers;
 use App\Models\ChecklistItem;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ChecklistItemResource extends Resource
 {
@@ -20,7 +17,7 @@ class ChecklistItemResource extends Resource
 
     protected static ?string $model = ChecklistItem::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-check-circle';
 
     // Label Indonesia: tanpa ini Filament memakai nama kelas Inggris
     // sehingga sidebar dan judul tab berbunyi "ChecklistItem".
