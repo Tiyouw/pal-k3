@@ -1,0 +1,106 @@
+<!doctype html>
+<!-- PRATINJAU LOGIN: membandingkan perilaku ukuran "sekarang" dan "usulan".
+     Parameter: versi=sekarang|usulan   jenis=admin|petugas
+     "sekarang" menyalin CSS di resources/css/masuk.css dan override .fi-simple-main di theme.css.
+     "usulan" adalah perbaikan yang diusulkan (kartu selalu di tengah, selalu ada jarak ke tepi).
+     Halaman ini melaporkan ukuran kartu ke induknya (index.html) lewat postMessage. -->
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pratinjau login — Inspeksi K3 APAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ===== disalin dari resources/css/masuk.css (bagian yang tidak menyangkut ukuran kartu) ===== */
+.k3-login-body { margin:0; background:#eef2f3; font-family:Inter,system-ui,sans-serif; color:#162b33; }
+.k3-login-body * { box-sizing:border-box; }.k3-login-body a { color:inherit; text-decoration:none; }
+.k3-login-shell { display:grid; background:white; overflow:hidden; box-shadow:0 18px 70px #082a3310; font-family:Inter,system-ui,sans-serif; color:#162b33; }
+.k3-login-story { background:#031e25; color:#fff; position:relative; overflow:hidden; display:flex; flex-direction:column; }
+.k3-login-brand { color:white; position:relative; z-index:1; align-self:flex-start; }
+.k3-login-brand .k3-merek { display:flex; align-items:center; gap:12px; font-size:15px; font-weight:600; line-height:1.4; }.k3-login-brand .k3-monogram { font-size:26px; letter-spacing:-.06em; }.k3-login-brand .k3-monogram > span { color:#f5b700; }.k3-login-brand small { display:block; font-size:9px; font-weight:400; letter-spacing:.13em; opacity:.7; margin-top:3px; }
+.k3-login-message { position:relative; z-index:1; }.k3-login-eyebrow { display:block; font-size:10px; font-weight:600; letter-spacing:.14em; color:#6b7e85; }.k3-login-story .k3-login-eyebrow { color:#9eb9c1; }.k3-login-message h1 { font-weight:500; line-height:1.15; letter-spacing:-.055em; margin:20px 0; }.k3-login-message h1 em { color:#f5b700; font-style:normal; }.k3-login-message p { font-size:13px; line-height:1.8; color:#adc2c8; }
+.k3-login-illustration { position:relative; height:210px; margin-top:15px; }.k3-login-illustration > svg { position:absolute; width:115px; height:184px; right:38px; top:-35px; transform:rotate(13deg); z-index:1; }.k3-orbit { position:absolute; border:1px solid #31515a; border-radius:50%; width:340px; height:340px; right:-110px; top:-65px; }.k3-orbit-two { width:240px; height:240px; top:-15px; right:-60px; }.k3-illustration-label { position:absolute; left:0; bottom:30px; font-size:8px; letter-spacing:.15em; color:#7d9ba4; }.k3-login-story-foot { display:flex; justify-content:space-between; gap:16px; margin-top:auto; padding-top:20px; border-top:1px solid #29464d; font-size:9px; color:#9bb6bd; position:relative; }
+.k3-login-form-panel { display:flex; flex-direction:column; }.k3-login-back { font-size:11px; color:#627078; align-self:flex-start; min-height:40px; display:flex; align-items:center; }.k3-login-form-content { margin:auto 0; padding:36px 0; }.k3-login-form-content h2 { font-size:28px; line-height:1.25; font-weight:600; letter-spacing:-.04em; margin:15px 0; }.k3-login-intro { color:#64767e; font-size:13px; line-height:1.8; margin:0 0 30px; }.k3-login-help { margin:22px 0 0; text-align:center; color:#64767e; font-size:11px; line-height:1.8; }.k3-login-switch { border-top:1px solid #e5ebed; margin-top:24px; padding-top:22px; font-size:11px; color:#64767e; line-height:2; }.k3-login-switch a { display:block; font-weight:600; color:#1d4855; }.k3-login-foot { color:#64767e; font-size:10px; line-height:1.7; margin:0; }
+.k3-login-field { margin-bottom:20px; }.k3-login-field label { display:block; font-size:12px; font-weight:600; margin-bottom:9px; }.k3-login-field label i { color:#c0283d; font-style:normal; }.k3-login-field input { width:100%; height:48px; border:1px solid #cbd7db; border-radius:9px; background:#fff; padding:0 13px; font-family:inherit; color:#162b33; font-size:14px; }.k3-login-field input::placeholder { color:#7a8a90; font-size:12px; }.k3-password-wrap { position:relative; }.k3-password-wrap input { padding-right:68px; }.k3-password-toggle { position:absolute; right:3px; top:3px; height:42px; border:0; background:transparent; padding:0 10px; font-family:inherit; font-size:11px; cursor:pointer; color:#345c69; }.k3-login-remember { display:flex; align-items:center; gap:9px; min-height:44px; font-size:12px; margin-bottom:18px; }.k3-login-remember input { width:18px; height:18px; accent-color:#b47b00; }.k3-login-submit { display:flex; justify-content:space-between; align-items:center; width:100%; min-height:48px; background:#f5b700; border:0; border-radius:9px; color:#031e25; padding:12px 18px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; }.j-admin .k3-login-submit { justify-content:center; }
+.k3-login-shell :is(a,button,input):focus-visible { outline:3px solid #c38c00; outline-offset:3px; }
+
+/* ===== SEKARANG: ukuran persis seperti kode di repo ===== */
+.v-sekarang .k3-login-main { min-height:100dvh; display:grid; place-items:center; padding:40px 24px; }
+.v-sekarang .k3-login-shell { width:100%; max-width:1080px; grid-template-columns:1fr 1fr; border-radius:24px; }
+.v-sekarang .k3-login-story { padding:38px; min-height:690px; }
+.v-sekarang .k3-login-message { margin-top:65px; }.v-sekarang .k3-login-message h1 { font-size:46px; }
+.v-sekarang .k3-login-form-panel { padding:38px 48px; }
+/* kerangka Filament (hanya login admin): .fi-simple-layout > -main-ctn > -main (margin my-16, tanpa padding samping) */
+.v-sekarang .fi-simple-layout { display:flex; flex-direction:column; align-items:center; min-height:100vh; }
+.v-sekarang .fi-simple-main-ctn { display:flex; width:100%; flex-grow:1; align-items:center; justify-content:center; }
+.v-sekarang .fi-simple-main { margin:4rem 0; width:100%; max-width:1080px; }
+@media(max-width:640px) { .v-sekarang .fi-simple-main { margin:0; } }
+@media(max-width:760px) { .v-sekarang .k3-login-main { display:block; padding:0; }.v-sekarang .k3-login-shell { grid-template-columns:1fr; border-radius:0; box-shadow:none; }.v-sekarang .k3-login-story { min-height:auto; padding:24px; }.v-sekarang .k3-login-message { margin-top:28px; }.v-sekarang .k3-login-message .k3-login-eyebrow,.v-sekarang .k3-login-message p,.v-sekarang .k3-login-illustration,.v-sekarang .k3-login-story-foot { display:none; }.v-sekarang .k3-login-message h1 { font-size:32px; margin:0; }.v-sekarang .k3-login-message h1 br { display:none; }.v-sekarang .k3-login-message h1 em { display:block; }.v-sekarang .k3-login-form-panel { padding:18px 24px 24px; }.v-sekarang .k3-login-form-content { padding:20px 0 28px; }.v-sekarang .k3-login-form-content h2 { font-size:26px; }.v-sekarang .k3-login-intro { margin-bottom:24px; } }
+
+/* ===== USULAN: satu aturan untuk kedua login; kartu selalu di tengah dan selalu ada jarak ke tepi ===== */
+.v-usulan .k3-login-main,.v-usulan .fi-simple-layout { min-height:100dvh; display:grid; place-items:center; padding:clamp(16px,4dvh,48px) clamp(16px,4vw,40px); }
+.v-usulan .fi-simple-main-ctn { display:block; width:100%; }
+.v-usulan .fi-simple-main { margin:0 auto; width:100%; max-width:960px; }
+.v-usulan .k3-login-shell { width:100%; max-width:960px; margin:0 auto; grid-template-columns:minmax(0,5fr) minmax(0,6fr); border-radius:24px; }
+.v-usulan .k3-login-story { padding:clamp(24px,3vw,36px); min-height:0; }
+.v-usulan .k3-login-message { margin-top:clamp(24px,5dvh,56px); }.v-usulan .k3-login-message h1 { font-size:clamp(34px,3.6vw,44px); }
+.v-usulan .k3-login-illustration { height:clamp(130px,22dvh,190px); }
+/* spasi vertikal mengikuti tinggi layar (dvh), supaya kartu tidak lebih tinggi dari layar kecil */
+.v-usulan .k3-login-form-panel { padding:clamp(16px,3.2dvh,34px) clamp(24px,4vw,44px); }
+.v-usulan .k3-login-back { min-height:clamp(28px,4dvh,40px); }
+.v-usulan .k3-login-form-content { padding:clamp(4px,2dvh,28px) 0; }
+.v-usulan .k3-login-form-content h2 { margin:clamp(8px,1.6dvh,15px) 0; }
+.v-usulan .k3-login-intro { margin-bottom:clamp(14px,2.6dvh,28px); }
+.v-usulan .k3-login-field { margin-bottom:clamp(10px,2dvh,20px); }
+.v-usulan .k3-login-remember { min-height:clamp(34px,4.6dvh,44px); margin-bottom:clamp(8px,1.8dvh,18px); }
+.v-usulan .k3-login-help { margin-top:clamp(10px,2.2dvh,22px); }
+.v-usulan .k3-login-switch { margin-top:clamp(10px,2.4dvh,24px); padding-top:clamp(10px,2.2dvh,22px); }
+@media(max-width:860px) {
+ .v-usulan .k3-login-shell { grid-template-columns:1fr; max-width:520px; border-radius:20px; }
+ .v-usulan .k3-login-story { min-height:0; padding:24px; }
+ .v-usulan .k3-login-message { margin-top:20px; }
+ .v-usulan .k3-login-message .k3-login-eyebrow,.v-usulan .k3-login-message p,.v-usulan .k3-login-illustration,.v-usulan .k3-login-story-foot { display:none; }
+ .v-usulan .k3-login-message h1 { font-size:28px; margin:0; }.v-usulan .k3-login-message h1 br { display:none; }.v-usulan .k3-login-message h1 em { display:block; }
+ .v-usulan .k3-login-form-panel { padding:16px 24px 24px; }.v-usulan .k3-login-form-content h2 { font-size:26px; }.v-usulan .k3-login-intro { margin-bottom:24px; }
+}
+@media(max-height:520px) { .v-usulan .k3-login-message { display:none; }.v-usulan .k3-login-story { padding:16px 24px; } }
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<div id="akar"></div>
+<pre id="ukuran" hidden></pre>
+<script src="../apar.js"></script>
+<script>
+const Q = new URLSearchParams(location.search), versi = Q.get('versi') === 'usulan' ? 'usulan' : 'sekarang', jenis = Q.get('jenis') === 'petugas' ? 'petugas' : 'admin';
+document.body.className = `k3-login-body v-${versi} j-${jenis}`;
+const A = jenis === 'admin';
+const mata = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const shell = `<div class="k3-login-shell">
+ <aside class="k3-login-story"><a class="k3-login-brand" href="#"><span class="k3-merek"><span class="k3-monogram">K3<span> / </span></span><span>Inspeksi APAR<small>PT PAL INDONESIA</small></span></span></a>
+  <div class="k3-login-message"><span class="k3-login-eyebrow">DIVISI K3LH · PT PAL INDONESIA</span><h1>Keselamatan <br>dimulai dari <br><em>kepedulian.</em></h1><p>Satu pemeriksaan hari ini.<br>Perlindungan untuk setiap langkah esok.</p></div>
+  <div class="k3-login-illustration"><span class="k3-orbit"></span><span class="k3-orbit k3-orbit-two"></span>${aparSVG({w:115, jarum:'hijau', label:'INSPEKSI K3'})}<span class="k3-illustration-label">PERIKSA. CATAT. TINDAK LANJUTI.</span></div>
+  <div class="k3-login-story-foot"><span>Inspeksi K3 APAR</span><span>Lingkungan kerja yang lebih aman ↗</span></div></aside>
+ <section class="k3-login-form-panel"><a href="#" class="k3-login-back">← Kembali ke beranda</a>
+  <div class="k3-login-form-content"><span class="k3-login-eyebrow">${A ? 'PANEL PENGELOLAAN' : 'PORTAL PETUGAS'}</span><h2>${A ? 'Selamat datang kembali.' : 'Siap menjaga keselamatan?'}</h2>
+   <p class="k3-login-intro">${A ? 'Masuk untuk memantau pemeriksaan dan menindaklanjuti temuan APAR.' : 'Masuk dengan NIP untuk memulai pemeriksaan dan mencatat kondisi APAR di lapangan.'}</p>
+   <form onsubmit="return false"><div class="k3-login-field"><label for="nip">NIP${A ? '<i>*</i>' : ''}</label><input id="nip" placeholder="Masukkan NIP Anda" autocomplete="off"></div>
+    <div class="k3-login-field"><label for="sandi">Kata sandi${A ? '<i>*</i>' : ''}</label><div class="k3-password-wrap"><input id="sandi" type="password" placeholder="${A ? '' : 'Masukkan kata sandi'}"><button type="button" class="k3-password-toggle" aria-label="Tampilkan kata sandi">${A ? mata : 'Lihat'}</button></div></div>
+    <label class="k3-login-remember"><input type="checkbox">${A ? 'Ingat saya' : 'Ingat perangkat ini'}</label>
+    <button class="k3-login-submit"><span>Masuk</span>${A ? '' : '<span aria-hidden="true">→</span>'}</button></form>
+   <p class="k3-login-help">Lupa kata sandi? Hubungi Administrator K3 Divisi K3LH.</p>
+   <div class="k3-login-switch">${A ? 'Bertugas di lapangan?' : 'Administrator atau Pemantau?'} <a href="#">${A ? 'Masuk sebagai petugas ↗' : 'Masuk ke panel pengelolaan ↗'}</a></div></div>
+  <p class="k3-login-foot">${A ? 'Akses terbatas untuk Administrator K3 dan Pemantau.' : 'Gunakan akun Anda sendiri untuk setiap pemeriksaan.'}</p></section></div>`;
+// petugas = halaman Blade biasa; admin = di dalam kerangka layout sederhana Filament
+document.getElementById('akar').innerHTML = A
+ ? `<div class="fi-simple-layout"><div class="fi-simple-main-ctn"><main class="fi-simple-main">${shell}</main></div></div>`
+ : `<main class="k3-login-main">${shell}</main>`;
+
+function ukur() {
+ const c = document.querySelector('.k3-login-shell').getBoundingClientRect(), de = document.documentElement;
+ const tinggiDok = Math.max(de.scrollHeight, document.body.scrollHeight);
+ const r = {k3:'login', q:location.search, vw:innerWidth, vh:innerHeight, w:Math.round(c.width), h:Math.round(c.height),
+   l:Math.round(c.left), r:Math.round(de.clientWidth - c.right), t:Math.round(c.top + scrollY), b:Math.round(tinggiDok - (c.bottom + scrollY)),
+   gulir: tinggiDok > innerHeight + 1};
+ document.getElementById('ukuran').textContent = JSON.stringify(r);
+ if (parent !== window) parent.postMessage(r, '*');
+}
+addEventListener('load', ukur); addEventListener('resize', ukur);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(ukur);
+</script></body></html>

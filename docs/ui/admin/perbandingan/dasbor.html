@@ -1,0 +1,528 @@
+<!doctype html>
+<!-- PRATINJAU DASBOR PANEL ADMIN: satu halaman, banyak kondisi.
+     Dipakai oleh index.html lewat iframe, tapi bisa dibuka sendiri.
+     Parameter URL (semua opsional):
+       peran=admin|pemantau      pem=m1|m2|m3 (halaman pemantau)
+       peta=p1|p2|p3|p4|p5       data=isi|belum|tanpa
+       sb=buka|ikon              cari=tutup|dropdown|modal  (q=kata awal)
+       aksen=satu|per            lihat=semua|atas|kerangka|peta
+       tab=berat|lewat|tinjau|belum   min=<tinggi minimum px>
+     Pintasan yang berfungsi di sini: Ctrl/Cmd+K atau "/" (cari), Ctrl/Cmd+B (sidebar), Esc.
+     Data karangan dari ../data.js (unit & koordinat = seed asli). Bukan data produksi. -->
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pratinjau dasbor panel — Inspeksi K3 APAR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--ink:#031e25;--ink2:#0a2a32;--ink3:#123941;--amber:#f5b700;--aksen:#f5b700;--btn:#d97a00;--kanvas:#f2f5f6;--teks:#0f2229;--redup:#627078;--garis:#e3e9eb}
+body{font:14px/1.5 Inter,system-ui,sans-serif;background:var(--kanvas);color:var(--teks);font-feature-settings:"ss01";-webkit-font-smoothing:antialiased}
+body.mandiri .app{min-height:100vh}
+body.ro.aksen-per{--aksen:#6aa6ff;--btn:#2f6fd0}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+ul{list-style:none}
+:focus-visible{outline:3px solid var(--amber);outline-offset:2px;border-radius:8px}
+svg{display:block}
+.app{display:grid;grid-template-columns:256px minmax(0,1fr)}
+.kanan{min-width:0}
+
+/* ---- sidebar ---- */
+.sb{background:var(--ink);color:#dce8eb;display:flex;flex-direction:column;position:relative;z-index:30}
+.sb-top{height:64px;display:flex;align-items:center;padding:0 20px;flex:none}
+.merek{display:flex;align-items:center;gap:10px;color:#fff;white-space:nowrap}
+.merek .mono{font-size:26px;font-weight:600;letter-spacing:-.05em;line-height:1}.merek .mono i{font-style:normal;color:var(--amber);font-weight:300}
+.merek b{display:block;font-size:15px;font-weight:600;line-height:1.2}.merek small{display:block;font-size:9px;letter-spacing:.14em;color:#9eb9c1;font-weight:500}
+.sb nav{padding:8px 4px;flex:1}
+.gr{font-size:10.5px;letter-spacing:.15em;color:#7f9aa2;font-weight:500;padding:20px 16px 8px}
+.gs{display:none;height:1px;background:#1d3b43;margin:12px 16px}
+.ni{position:relative;display:flex;align-items:center;gap:12px;height:40px;padding:0 12px;margin:2px 0;border-radius:10px;color:#dce8eb;white-space:nowrap}
+.ni svg{flex:none;width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.ni:hover{background:#ffffff0f}
+.ni.aktif{background:#ffffff14;color:#fff}.ni.aktif::before{content:'';position:absolute;left:-4px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--aksen)}
+.ni.aktif svg{stroke:var(--aksen);opacity:1}
+.ni .lb{flex:1}
+.bd{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;background:#fff3d1;color:#9a6a00}
+.cut{display:flex;align-items:center;gap:12px;height:40px;margin:0 4px 6px;padding:0 12px;border-radius:10px;color:#9eb9c1;font-size:12.5px;position:relative;white-space:nowrap}
+.cut svg{flex:none;width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.cut:hover{background:#ffffff0f;color:#fff}.cut span{flex:1;text-align:left}
+kbd{font:500 10.5px/1 Inter,sans-serif;padding:3px 6px;border-radius:5px;border:1px solid #31515a;color:#9eb9c1;letter-spacing:.02em;white-space:nowrap}
+.pengguna{border-top:1px solid #1d3b43;padding:14px 20px;white-space:nowrap;display:flex;gap:12px;align-items:center;flex:none}
+.pengguna b{display:block;font-size:13.5px;font-weight:500;color:#fff}.pengguna small{font-size:11.5px;color:#8fa9b0}
+.pengguna .ini{display:none;width:32px;height:32px;border-radius:50%;background:#ffffff1f;place-items:center;font-size:12px;font-weight:500;color:#fff;flex:none}
+.tirai{display:none}
+@media(min-width:1024px){
+ .app.ikon{grid-template-columns:72px minmax(0,1fr)}
+ .ikon .merek b,.ikon .merek small,.ikon .lb,.ikon .bd,.ikon .gr,.ikon .cut span,.ikon .cut kbd,.ikon .pengguna .nama{display:none}
+ .ikon .gs{display:block}
+ .ikon .sb-top{padding:0;justify-content:center}
+ .ikon .ni,.ikon .cut{justify-content:center;padding:0;margin-left:8px;margin-right:8px}
+ .ikon .ni.aktif::before{left:-8px}
+ .ikon .pengguna{justify-content:center;padding:14px 0}.ikon .pengguna .ini{display:grid}
+ .ikon [data-t]:hover::after{content:attr(data-t);position:absolute;left:calc(100% + 12px);top:50%;transform:translateY(-50%);background:#fff;color:var(--teks);padding:6px 10px;border-radius:7px;font-size:12.5px;font-weight:500;white-space:nowrap;box-shadow:0 8px 24px #031e2533;z-index:60}
+ .ikon .cut svg{transform:rotate(180deg)}
+}
+
+/* ---- bilah atas & pencarian ---- */
+.tb{height:64px;background:#fff;border-bottom:1px solid var(--garis);display:flex;align-items:center;gap:12px;padding:0 32px;justify-content:flex-end;position:relative;z-index:20}
+.burger{display:none;width:40px;height:40px;border-radius:10px;place-items:center}
+.burger svg,.cari-in svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.cari{position:relative;flex:0 1 380px;min-width:0}
+.cari-in{display:flex;align-items:center;gap:8px;width:100%;height:40px;border:1px solid #d3dcdf;border-radius:10px;padding:0 10px;color:#7a8a90;background:#fff;text-align:left}
+.cari-in input{flex:1;min-width:0;border:0;outline:0;background:none;font:inherit;color:var(--teks)}
+.cari-in:focus-within{border-color:#0b2f37;box-shadow:0 0 0 3px #f5b70055}
+.cari-in kbd{margin-left:auto;border-color:#d3dcdf;color:#7a8a90}
+.dd{position:absolute;top:calc(100% + 8px);right:0;width:min(540px,calc(100vw - 32px));background:#fff;border:1px solid var(--garis);border-radius:14px;box-shadow:0 20px 50px #031e2526;z-index:60;overflow:hidden}
+.dd[hidden]{display:none}
+.av{width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:500;flex:none}
+.aksen-per .av{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--aksen)}
+.hg{font-size:10.5px;letter-spacing:.14em;color:#7a8a90;font-weight:500;padding:12px 18px 6px}
+.hs{display:flex;align-items:center;gap:12px;padding:8px 18px;cursor:pointer}
+.hs.aktif,.hs:hover{background:#eef3f4}
+.hs .k{flex:none;min-width:44px;height:30px;border-radius:8px;background:#eef2f3;display:grid;place-items:center;font-size:12px;font-weight:600;padding:0 6px}
+.hs .k svg{width:16px;height:16px;stroke:#46565d;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.hs b{font-weight:500}.hs small{display:block;color:var(--redup);font-size:12px}
+.hs .pil{margin-left:auto;font-size:11px;color:#7a8a90;white-space:nowrap}
+.kosong-h{padding:22px 18px;color:var(--redup)}.kosong-h small{display:block;font-size:12px;margin-top:2px}
+.pal-ft{display:flex;gap:16px;align-items:center;padding:10px 18px;border-top:1px solid var(--garis);font-size:12px;color:var(--redup);flex-wrap:wrap}
+.pal-ft kbd{border-color:#d3dcdf;color:#627078}.pal-ft .ml{margin-left:auto}
+mark{background:#fff0b8;color:inherit;border-radius:3px;padding:0 1px}
+.tirai-c{position:fixed;inset:0;background:#031e2580;z-index:80;display:flex;justify-content:center;align-items:flex-start;padding:72px 16px}
+.pal{width:min(640px,100%);background:#fff;border-radius:16px;box-shadow:0 30px 80px #031e2566;overflow:hidden}
+.pal-in{display:flex;gap:10px;align-items:center;padding:0 18px;height:56px;border-bottom:1px solid var(--garis);color:#7a8a90}
+.pal-in svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.pal-in input{flex:1;border:0;outline:0;font:inherit;font-size:16px;background:none;color:var(--teks)}
+.pal-in kbd{border-color:#d3dcdf;color:#7a8a90}
+.hasil{max-height:380px;overflow:auto;padding-bottom:6px}
+
+/* ---- isi ---- */
+main{padding:32px 32px 40px;display:grid;gap:20px;min-width:0;align-content:start}
+.hd{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;padding-top:24px}
+h1{font-size:28px;line-height:1.2;font-weight:600;letter-spacing:-.03em}
+.sub{color:var(--redup);margin-top:12px;font-size:13.5px}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:10px;font-weight:600;font-size:13.5px;white-space:nowrap}
+.btn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.btn-o{background:var(--btn);color:#fff}
+.card{background:#fff;border-radius:20px;padding:22px;min-width:0}
+.eb{font-size:10.5px;letter-spacing:.16em;color:#7a8a90;font-weight:500}
+.card h2{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.eb+h2{margin-top:6px}
+.sh{font-size:14px;font-weight:600;margin:22px 0 4px}
+.muted{color:var(--redup)}
+.chip{font-size:11px;padding:2px 10px;border-radius:99px;background:#eef3f4;color:#46565d;font-weight:500;white-space:nowrap}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.baru{font-size:10px;font-weight:600;letter-spacing:.06em;background:#e8f0ff;color:#2b5aa8;padding:1px 6px;border-radius:5px;margin-left:6px;vertical-align:2px;text-transform:uppercase}
+
+.kpi{display:grid;grid-template-columns:1.1fr repeat(4,minmax(0,1fr));gap:12px}
+.k{background:#fff;border-radius:16px;padding:18px 18px 16px;text-align:left;border:2px solid transparent;position:relative;min-width:0;display:block}
+button.k:hover{border-color:#cfdadd}
+.k .l{display:flex;gap:8px;align-items:center;font-size:12.5px;color:#46565d}
+.k strong{display:block;font-size:30px;font-weight:500;letter-spacing:-.04em;margin:14px 0 4px;line-height:1.1}
+.k strong small{font-size:13px;letter-spacing:0;font-weight:400}
+.k p{font-size:12px;color:var(--redup)}
+.k.sel{border-color:#0b2f37}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.k-p{background:var(--ink);color:#fff;overflow:hidden;min-height:160px}.k-p .l,.k-p p{color:#c9dadf}
+.k-p .pb{height:5px;border-radius:9px;background:#ffffff26;margin-top:16px;max-width:180px}.k-p .pb i{display:block;height:100%;background:var(--amber);border-radius:9px}
+.k-p .apar{position:absolute;right:12px;top:14px}
+
+.row{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 0;border-top:1px solid #edf1f2}
+.row:first-of-type{margin-top:16px}
+.kode{width:54px;height:54px;border-radius:12px;background:#eef3f4;display:grid;place-items:center;font-weight:600;font-size:13.5px}
+.row h3{font-size:14px;font-weight:600}.row p{margin-top:4px}.row small{color:var(--redup);font-size:11.5px;display:block;margin-top:6px}
+.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:99px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.t-m{background:#fbe9ec;color:#b72c40}.t-k{background:#fff3d1;color:#8a5a00}.t-b{background:#e4eefb;color:#37659a}.t-h{background:#e3f4ec;color:#19734d}.t-a{background:#eceff1;color:#4b535b}
+.aks{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.bt{height:38px;padding:0 14px;border-radius:9px;font-weight:600;font-size:12.5px;background:#eef3f4;white-space:nowrap}
+.bt.g{background:var(--ink);color:#fff}.bt[disabled]{opacity:.45;cursor:default}
+.ln{font-size:12px;white-space:nowrap}
+.kosong{text-align:center;padding:40px 0 22px;color:var(--redup)}.kosong h3{color:var(--teks);font-size:14px;font-weight:600}
+.pg{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-top:14px;border-top:1px solid #edf1f2;font-size:12px;color:var(--redup);flex-wrap:wrap}.pg span:last-child{display:flex;gap:8px}
+
+.ins{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:20px}
+.ins.tiga{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr)}
+.gl{background:var(--ink2);color:#fff}
+.gl .chip{background:#ffffff1a;color:#cfe0e5}
+.chart{width:100%;height:auto;margin-top:8px}.chart text{font-size:12px;fill:#46565d;font-family:inherit}
+.cap{font-size:12px;color:var(--redup);margin-top:6px}
+.ag{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.ai{background:var(--ink3);border:1px solid #1c4850;border-radius:10px;padding:10px 12px;min-width:0}
+.ah{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#d6e4e8}
+.dt{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.lg{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin-top:18px;padding-top:16px;border-top:1px solid #1c4850;font-size:12.5px}
+.lg li{display:flex;align-items:center;gap:10px}.lg b{margin-left:auto;font-weight:600}
+.sak{display:inline-flex;background:#ffffff14;border-radius:9px;padding:3px}.sak button{padding:4px 12px;border-radius:7px;font-size:12px;color:#cfe0e5}.sak button[aria-pressed=true]{background:#fff;color:var(--ink)}
+.zona{display:flex;gap:6px;margin-top:14px;overflow-x:auto;padding-bottom:4px}
+.zona button{flex:none;font-size:11.5px;padding:5px 10px;border-radius:99px;background:#ffffff14;color:#cfe0e5;white-space:nowrap}
+.zona button[aria-pressed=true]{background:#fff;color:var(--ink)}
+.kv{margin-top:12px;border-radius:12px;background:#08242b radial-gradient(#ffffff14 1px,transparent 1px) 0 0/16px 16px;overflow:hidden}
+.kv svg{width:100%;height:auto}.kv text{font-family:inherit}
+.ttk{cursor:pointer}.ttk:focus-visible{outline:none}.ttk .hl{stroke:none}.ttk:focus-visible .hl,.ttk.p .hl{stroke:#fff;stroke-width:2}
+.info{margin-top:10px;background:#ffffff12;border-radius:10px;padding:10px 12px;font-size:12.5px;min-height:56px;color:#e6eef1}
+.info small{display:block;color:#a9c0c7}
+.lebar{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:24px;margin-top:4px}
+.samping h3{font-size:13px;font-weight:600;margin-top:16px;color:#e6eef1}
+.samping button{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:10px 0;border-top:1px solid #1c4850;font-size:12.5px;color:#e6eef1}
+.samping .kd{flex:none;min-width:44px;height:30px;border-radius:8px;background:#ffffff1a;display:grid;place-items:center;font-weight:600;font-size:12px}
+.samping small{display:block;color:#a9c0c7}
+.kosong-g{padding:26px 0;color:#c9dadf}
+
+.mg{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:20px;align-items:start}
+.kol{display:grid;gap:20px;min-width:0}
+.nar{margin-top:12px;font-size:14.5px;line-height:1.7;color:#2b3b41}
+.num3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.num3 div{background:#f2f5f6;border-radius:14px;padding:14px}.num3 b{font-size:28px;font-weight:500;letter-spacing:-.04em;display:block;line-height:1.2}.num3 small{color:var(--redup)}
+.risk{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;padding:12px 0;border-top:1px solid #edf1f2;align-items:center}
+.risk .kode{width:44px;height:44px;font-size:12px;background:#fbe9ec;color:#b72c40}
+.lap li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;border-top:1px solid #edf1f2}
+.lap li:first-child{border-top:0}.lap small{display:block;color:var(--redup);font-size:12px}
+.kp .besar{font-size:44px;font-weight:300;letter-spacing:-.04em;line-height:1.1;margin-top:8px}
+.kp .sb2{color:#c9dadf;font-size:12.5px}
+.br{display:grid;gap:12px;margin-top:16px}.br div span{display:flex;justify-content:space-between;font-size:12.5px;color:#e6eef1}
+.br i{display:block;height:6px;border-radius:9px;background:#ffffff26;margin-top:5px;overflow:hidden}.br i b{display:block;height:100%;background:var(--amber)}
+.strip{display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap}.strip .nar{margin:6px 0 0;max-width:760px;font-size:14px}
+
+.toast{position:fixed;top:76px;left:50%;transform:translate(-50%,-20px);background:var(--teks);color:#fff;padding:10px 18px;border-radius:99px;font-weight:500;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:90;max-width:calc(100vw - 32px)}
+.toast.tampil{opacity:1;transform:translate(-50%,0)}
+
+body.l-peta .sb,body.l-peta .tb{display:none}body.l-peta .app{display:block}body.l-peta main{padding:16px}
+@media(max-width:1380px){.ins.tiga{grid-template-columns:1fr 1fr}.ins.tiga>:last-child{grid-column:1/-1}}
+@media(max-width:1180px){.kpi{grid-template-columns:repeat(4,minmax(0,1fr))}.k-p{grid-column:1/-1}.ins,.ins.tiga,.mg,.lebar{grid-template-columns:1fr}.ins.tiga>:last-child{grid-column:auto}}
+@media(max-width:1023px){
+ .app{grid-template-columns:minmax(0,1fr)}
+ .sb{position:fixed;inset:0 auto 0 0;width:272px;transform:translateX(-100%);transition:transform .2s}
+ .app.buka .sb{transform:none}.app.buka .tirai{display:block;position:fixed;inset:0;background:#031e2573;z-index:25}
+ .burger{display:grid}.tb{padding:0 16px;justify-content:space-between}.cari{flex:1}.cari-in kbd{display:none}.cut{display:none}
+ main{padding:20px 16px 32px}.hd{padding-top:4px}
+}
+@media(max-width:640px){
+ .kpi{grid-template-columns:1fr 1fr}
+ .row{grid-template-columns:44px minmax(0,1fr)}.kode{width:44px;height:44px;font-size:12px}.aks{grid-column:1/-1;justify-content:flex-start}
+ h1{font-size:24px}.num3,.lg{grid-template-columns:1fr}.card{padding:18px}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style></head>
+<body>
+<div class="app" id="app">
+  <div class="tirai" id="tirai"></div>
+  <aside class="sb" id="sb" aria-label="Navigasi utama"></aside>
+  <div class="kanan">
+    <header class="tb" id="tb"></header>
+    <main id="main"></main>
+  </div>
+</div>
+<div id="modal"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="../data.js"></script>
+<script src="../apar.js"></script>
+<script>
+const $ = s => document.querySelector(s);
+const Q = new URLSearchParams(location.search), g = (k, d) => Q.get(k) || d;
+const M = {peran: g('peran','admin'), pem: g('pem','m1'), peta: g('peta','p5'), data: g('data','isi'), sb: g('sb','buka'),
+           cari: g('cari','tutup'), aksen: g('aksen','satu'), lihat: g('lihat','semua')};
+const RO = M.peran === 'pemantau';
+const MAC = /Mac|iPhone|iPad/.test(navigator.platform);
+const KC = MAC ? '⌘ K' : 'Ctrl K', KB = MAC ? '⌘ B' : 'Ctrl B';
+document.body.classList.add(...[RO && 'ro', M.aksen === 'per' && 'aksen-per', 'l-' + M.lihat, top === window && 'mandiri'].filter(Boolean));
+if (+g('min', 0)) document.body.style.minHeight = (+g('min', 0)) + 'px';
+
+/* ---------- data (dari ../data.js; mode data mengubahnya) ---------- */
+const U = M.data === 'tanpa' ? [] : UNITS.map(u => M.data === 'belum' ? {...u, belum: true, kes: null, gerbang: null, masalah: null, gerbangKet: null, petugas: null, waktu: null} : u);
+const isi = M.data === 'isi';
+const BER = isi ? BERAT : [], LEW = isi ? LEWAT : [], TIN = isi ? Object.keys(GERBANG) : [];
+const cu = k => U.find(u => u.kode === k);
+const total = U.length, sudah = U.filter(u => !u.belum).length, belum = total - sudah;
+const persen = total ? sudah / total * 100 : 0;
+const fp = n => n.toFixed(1).replace('.', ',');
+const nKes = k => U.filter(u => u.kes === k).length;
+const TR = isi ? TREN : ['Mei','Jun','Jul','Agu','Sep','Okt'].map(b => [b, 0]);
+const areaLabel = u => u.gedung === 'Gedung PIP' ? `Gedung PIP · ${u.lantai}` : u.gedung;
+const areaTampil = a => a.replace('PIP Lt.', 'PIP · Lt.');
+const NAMA = RO ? 'Pemantau Manajemen' : 'Admin K3', PERAN = RO ? 'Pemantau' : 'Administrator K3', INISIAL = RO ? 'PM' : 'AK';
+
+/* ---------- ikon fungsional (untuk mode sidebar ikon) ---------- */
+const IK = {
+ home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/>',
+ clip:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 14l2 2 4-4"/>',
+ alert:'<path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.01"/>',
+ qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h3M20 18v3"/>',
+ file:'<path d="M6 3h8l5 5v13H6z"/><path d="M14 3v5h5M9 17v-3M12 17v-5M15 17v-2"/>',
+ tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/>',
+ bld:'<rect x="5" y="3" width="10" height="18"/><path d="M15 9h4v12h-4M8 7h4M8 11h4M8 15h4"/>',
+ box:'<path d="M12 3c3 4 6 6 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 1 1 1 2 2 2 0-2 0-4 1-6z"/>',
+ list:'<path d="M8 6h12M8 12h12M8 18h12M4 6v.01M4 12v.01M4 18v.01"/>',
+ ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+ menu:'<path d="M4 7h16M4 12h16M4 17h16"/>',
+ dl:'<path d="M12 4v10M8 10l4 4 4-4M5 20h14"/>',
+ chev:'<path d="M15 6l-6 6 6 6"/>'
+};
+const ic = n => `<svg viewBox="0 0 24 24" aria-hidden="true">${IK[n]}</svg>`;
+
+/* ---------- bentuk status (warna + bentuk, agar terbaca tanpa warna) ---------- */
+const COL = {layak:'#3ccf86', layak_catatan:'#f5b700', tidak_layak:'#ff6b78'};
+function shape(s, r = 5, ring = false) {
+ let o;
+ if (s === 'tidak_layak') o = `<rect x="${-r}" y="${-r}" width="${2*r}" height="${2*r}" rx="1.5" fill="${COL.tidak_layak}" transform="rotate(45)"/>`;
+ else if (s === 'layak_catatan') o = `<path d="M0 ${-r-1}L${r+1} ${r}L${-r-1} ${r}Z" fill="${COL.layak_catatan}" stroke="${COL.layak_catatan}" stroke-linejoin="round"/>`;
+ else if (s === 'belum') o = `<circle r="${r-1}" fill="none" stroke="#e6eef7" stroke-width="1.8"/>`;
+ else o = `<circle r="${r}" fill="${COL.layak}"/>`;
+ return o + (ring ? `<circle r="${r+4}" fill="none" stroke="#8fb8ff" stroke-width="1.3" stroke-dasharray="2.5 2.5"/>` : '');
+}
+const mini = (s, ring) => `<svg width="14" height="14" viewBox="-9 -9 18 18" aria-hidden="true">${shape(s, 5, ring)}</svg>`;
+const stU = u => u.belum ? 'belum' : (u.kes || 'layak');
+const ringU = u => !u.belum && u.gerbang && u.gerbang !== 'lolos';
+const NAMA_K = {layak:'Layak pakai', layak_catatan:'Layak dengan catatan', tidak_layak:'Tidak layak', belum:'Belum diperiksa'};
+
+/* ---------- navigasi & sidebar ---------- */
+const NAV = [
+ {g:null, i:[['Dasbor','home']]},
+ {g:'KEGIATAN', i:[['Inspeksi','clip'],['Temuan','alert'],['Lembar Stiker QR','qr'],['Laporan Bulanan','file']]},
+ {g:'DATA INDUK', adm:true, i:[['Tipe Objek','tag'],['Divisi','bld'],['Aset','box'],['Grup Checklist','list'],['Butir Checklist','ok']]}];
+function gambarSb() {
+ let h = `<div class="sb-top"><a class="merek" href="#"><span class="mono">K3<i>/</i></span><span><b>Inspeksi APAR</b><small>PT PAL INDONESIA</small></span></a></div><nav>`;
+ NAV.forEach((n, x) => {
+  if (n.adm && RO) return;
+  if (n.g) h += `<div class="gs"></div><p class="gr">${n.g}</p>`;
+  n.i.forEach(([t, i]) => h += `<a class="ni ${t === 'Dasbor' ? 'aktif' : ''}" href="#" data-t="${t}" ${t === 'Dasbor' ? 'aria-current="page"' : ''}>${ic(i)}<span class="lb">${t}</span>${t === 'Temuan' && BER.length ? `<span class="bd">${BER.length}</span>` : ''}</a>`);
+ });
+ h += `</nav><button type="button" class="cut" id="cut" data-t="Ciutkan menu">${ic('chev')}<span>Ciutkan menu</span><kbd>${KB}</kbd></button>
+  <div class="pengguna"><span class="ini" data-t="${NAMA}">${INISIAL}</span><div class="nama"><b>${NAMA}</b><small>${PERAN}</small></div></div>`;
+ $('#sb').innerHTML = h;
+}
+function gambarTb() {
+ const gaya = M.cari === 'modal';
+ $('#tb').innerHTML = `<button type="button" class="burger" id="burger" aria-label="Buka menu">${ic('menu')}</button>
+  <div class="cari" id="cari">${gaya
+   ? `<button type="button" class="cari-in" id="qb">${ic('search')}<span>Cari APAR, temuan, halaman…</span><kbd>${KC}</kbd></button>`
+   : `<label class="cari-in">${ic('search')}<input id="qi" type="text" autocomplete="off" placeholder="Cari APAR, temuan, halaman…" aria-label="Cari" role="combobox" aria-expanded="false"><kbd>${KC}</kbd></label><div class="dd" id="dd" hidden></div>`}</div>
+  <span class="av" aria-label="${NAMA}">${INISIAL}</span>`;
+}
+function toggleSb() {
+ const app = $('#app');
+ if (innerWidth >= 1024) { app.classList.toggle('ikon'); const t = app.classList.contains('ikon'); $('#cut').dataset.t = t ? `Buka menu (${KB})` : 'Ciutkan menu'; }
+ else app.classList.toggle('buka');
+}
+
+/* ---------- bagian halaman ---------- */
+let tab = g('tab', 'berat'), zona = 'Semua', pilih = null, modeKartu = 'titik';
+const TABS = {berat:['Temuan berat','butir','Perlu tindak lanjut','m'], lewat:['Lewat tenggat','butir','Melampaui target selesai','m'], tinjau:['Tinjauan posisi','inspeksi','Menunggu verifikasi GPS','b'], belum:['Belum diperiksa','unit','Sisa 26 hari bulan ini','k']};
+const WARNA = {m:'#b72c40', b:'#37659a', k:'#d9a000'};
+const JML = () => ({berat: BER.length, lewat: LEW.length, tinjau: TIN.length, belum});
+
+function kepala() {
+ return `<div class="hd"><div><h1>Halo, ${NAMA}</h1><p class="sub">Minggu, 4 Oktober 2026 · Periode Oktober 2026${RO ? ' · Akses hanya baca' : ''}</p></div>
+  <a class="btn btn-o" href="#" data-act="Laporan bulanan">${ic('dl')}Laporan bulanan</a></div>`;
+}
+function kpi() {
+ const j = JML();
+ return `<div class="kpi"><a class="k k-p" href="#" data-act="Buka laporan"><span class="l">Kepatuhan bulan ini</span><strong>${fp(persen)}<small>%</small></strong><p>${sudah} dari ${total} unit diperiksa</p><div class="pb"><i style="width:${persen}%"></i></div><span class="apar">${aparSVG({w:52, jarum:'hijau', label:'DP 4,5 kg'})}</span></a>
+  ${Object.entries(TABS).map(([k, [l, u, d, w]]) => `<button type="button" class="k ${tab === k ? 'sel' : ''}" data-tab="${k}" aria-pressed="${tab === k}"><span class="l"><i class="dot" style="background:${WARNA[w]}"></i>${l}</span><strong>${j[k]} <small>${u}</small></strong><p>${d}</p></button>`).join('')}</div>`;
+}
+function antrean() {
+ const [judul] = TABS[tab];
+ let list = ({berat:BER, lewat:LEW, tinjau:TIN}[tab] || []).map(cu).filter(Boolean);
+ if (tab === 'belum') list = U.filter(u => u.belum);
+ const tampil = list.slice(0, tab === 'belum' ? 5 : 6);
+ const rows = tampil.map(u => {
+  let p, s, a = '';
+  if (tab === 'tinjau') { p = LABEL_GERBANG[GERBANG[u.kode][0]]; s = `${u.petugas} · ${u.waktu} · ${GERBANG[u.kode][1]}`; a = `<a class="ln" href="#" data-act="Lihat bukti">Lihat bukti ↗</a>${RO ? '' : '<button class="bt g" data-act="Tinjau posisi">Tinjau posisi</button>'}`; }
+  else if (tab === 'belum') { p = `${u.tipe} ${u.kg} kg · ${u.lokasi}`; s = 'Belum ada inspeksi final bulan ini'; a = '<a class="ln" href="#" data-act="Kartu pemeriksaan">Kartu pemeriksaan ↗</a>'; }
+  else { p = u.masalah; s = `Target: ${tab === 'lewat' ? '01 Okt 2026' : 'Belum ditetapkan'} · Terbuka`; a = RO ? '' : '<button class="bt" data-act="Tetapkan tenggat">Tetapkan tenggat</button><button class="bt g" data-act="Tandai selesai">Tandai selesai</button>'; }
+  return `<article class="row"><span class="kode">${u.kode}</span><div><h3>${areaLabel(u)}</h3><p>${esc(p)}</p><small>${esc(s)}</small></div><div class="aks">${a}</div></article>`;
+ }).join('');
+ const kosong = `<div class="kosong"><h3>${total === 0 ? 'Belum ada data APAR' : 'Tidak ada antrean di kategori ini'}</h3><p>${total === 0 ? 'Ringkasan akan terisi setelah aset dan inspeksi tersedia.' : 'Pilih kategori lain untuk melanjutkan pemantauan.'}</p></div>`;
+ const pg = list.length > tampil.length ? `<nav class="pg" aria-label="Halaman antrean"><span>1–${tampil.length} dari ${list.length} entri</span><span><button class="bt" disabled>Sebelumnya</button><button class="bt" data-act="Halaman berikutnya">Berikutnya</button></span></nav>` : '';
+ return `<section class="card" id="antrean"><span class="eb">${RO ? 'PANTAUAN PEMERIKSAAN' : 'PERLU KEPUTUSAN ANDA'}</span><h2>${judul}</h2>${rows || kosong}${pg}</section>`;
+}
+function trenKartu() {
+ const maks = Math.max(total, ...TR.map(t => t[1]), 1);
+ const y = v => 145 - v / maks * 115, pts = TR.map((t, i) => `${30 + i*88},${y(t[1])}`).join(' ');
+ return `<section class="card"><div class="ch"><h2>Tren pemeriksaan</h2><span class="chip">6 bulan</span></div>
+  <svg class="chart" viewBox="0 0 500 185" role="img" aria-label="Tren jumlah APAR aktif yang diperiksa selama enam bulan">
+   ${[30,87,145].map(v => `<line x1="30" x2="470" y1="${v}" y2="${v}" stroke="#dde4e6" stroke-dasharray="3 5"/>`).join('')}
+   <polygon points="30,145 ${pts} 470,145" fill="#e7eeee"/><polyline points="${pts}" fill="none" stroke="#153d45" stroke-width="3" stroke-linejoin="round"/>
+   ${TR.map((t, i) => `<circle cx="${30+i*88}" cy="${y(t[1])}" r="4" fill="#f5b700" stroke="#153d45" stroke-width="2"/><text x="${30+i*88}" y="${y(t[1])-12}" text-anchor="middle">${t[1]}</text><text x="${30+i*88}" y="175" text-anchor="middle">${t[0]}</text>`).join('')}
+  </svg><p class="cap">Jumlah APAR aktif yang diperiksa per bulan. Satu unit dihitung sekali.</p></section>`;
+}
+function areaIsi() {
+ if (!total) return '<p class="kosong-g">Belum ada APAR aktif. Tambahkan aset untuk mulai memantau.</p>';
+ const grup = AREA.filter(a => U.some(u => u.area === a)).map(a => [a, U.filter(u => u.area === a)]);
+ return `<div class="ag">${grup.map(([a, us]) => `<div class="ai"><div class="ah"><span>${areaTampil(a)}</span><b>${us.filter(u => !u.belum).length}/${us.length}</b></div><div class="dt">${us.map(u => `<span title="${u.kode} · ${NAMA_K[stU(u)]}">${mini(stU(u), false)}</span>`).join('')}</div></div>`).join('')}</div>
+  <ul class="lg">${[['layak','Layak pakai',nKes('layak')],['layak_catatan','Layak dengan catatan',nKes('layak_catatan')],['tidak_layak','Tidak layak pakai',nKes('tidak_layak')],['belum','Belum diperiksa',belum]].map(([k, l, n]) => `<li>${mini(k)}${l}<b>${n}</b></li>`).join('')}</ul>`;
+}
+const areaKartu = () => `<section class="card gl"><div class="ch"><h2>Kondisi per area</h2><span class="chip">${total} unit</span></div>${areaIsi()}</section>`;
+
+/* ---------- peta (turunan varian D; sumbu dari lat/lng aset) ---------- */
+function petaSVG(W, H) {
+ const sub = zona === 'Semua' ? U : U.filter(u => u.area === zona);
+ if (!sub.length) return '';
+ let a0 = Math.min(...sub.map(u => u.lat)), a1 = Math.max(...sub.map(u => u.lat)), o0 = Math.min(...sub.map(u => u.lng)), o1 = Math.max(...sub.map(u => u.lng));
+ if (a1 - a0 < 1e-5) { a0 -= 5e-5; a1 += 5e-5 } if (o1 - o0 < 1e-5) { o0 -= 5e-5; o1 += 5e-5 }
+ const px = 44, py = 40, geser = {'Lt. 1':-16, 'Lt. 2':0, 'Lt. 3':16};
+ const X = u => px + (u.lng - o0) / (o1 - o0) * (W - 2*px) + (zona === 'Semua' && u.gedung === 'Gedung PIP' ? geser[u.lantai] || 0 : 0);
+ const Y = u => py + (a1 - u.lat) / (a1 - a0) * (H - 2*py);
+ let s = '';
+ if (zona === 'Semua') [...new Set(U.map(u => u.gedung))].forEach(ge => {
+  const us = U.filter(u => u.gedung === ge), xs = us.map(X), ys = us.map(Y);
+  if (Math.max(...xs) - Math.min(...xs) > W * .45 || Math.max(...ys) - Math.min(...ys) > H * .45) return; // titik tersebar: label menyesatkan, pakai chip zona
+  const cx = Math.min(Math.max(xs.reduce((t, v) => t + v, 0) / xs.length, 70), W - 70), cy = Math.max(Math.min(...ys) - 17, 14);
+  s += `<text x="${cx}" y="${cy}" text-anchor="middle" fill="#cfe0e5" font-size="11" font-weight="500">${ge === 'Gedung PIP' ? 'Gedung PIP · Lt. 1 | 2 | 3' : ge}</text>`;
+ });
+ sub.forEach(u => { const st = stU(u), rg = ringU(u);
+  s += `<g class="ttk ${u.kode === pilih ? 'p' : ''}" tabindex="0" role="button" data-k="${u.kode}" aria-label="${u.kode}, ${areaTampil(u.area)}: ${NAMA_K[st]}${rg ? ', perlu tinjauan posisi' : ''}" transform="translate(${X(u).toFixed(1)},${Y(u).toFixed(1)})"><circle r="12" fill="transparent"/>${shape(st, 5.5, rg)}<circle class="hl" r="10" fill="none"/></g>`; });
+ return `<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Peta skematik ${sub.length} APAR (bukan skala)">${s}</svg>`;
+}
+function petaIsi() {
+ if (!total) return '<p class="kosong-g">Belum ada APAR aktif. Tambahkan aset untuk mulai memantau.</p>';
+ const lebar = M.peta === 'p4', W = lebar ? 640 : 460, H = lebar ? 330 : 320;
+ const chips = ['Semua', ...AREA.filter(a => U.some(u => u.area === a))].map(z => { const us = z === 'Semua' ? U : U.filter(u => u.area === z);
+  return `<button type="button" data-zona="${z}" aria-pressed="${zona === z}">${z === 'Semua' ? 'Semua' : areaTampil(z).replace('Gedung ', '')} · ${us.filter(u => !u.belum).length}/${us.length}</button>`; }).join('');
+ const lg = [['layak','Layak',nKes('layak')],['layak_catatan','Catatan',nKes('layak_catatan')],['tidak_layak','Tidak layak',nKes('tidak_layak')],['belum','Belum',belum]].map(([k, l, n]) => `<li>${mini(k)}${l}<b>${n}</b></li>`).join('')
+  + `<li><svg width="14" height="14" viewBox="-9 -9 18 18" aria-hidden="true"><circle r="6" fill="none" stroke="#8fb8ff" stroke-width="1.3" stroke-dasharray="2.5 2.5"/></svg>Tinjau posisi<b>${TIN.length}</b></li>`;
+ const u = pilih && cu(pilih);
+ const info = u ? `<small>${esc(areaTampil(u.area))} · ${esc(u.lokasi)}</small><b>${u.kode}</b> · ${NAMA_K[stU(u)]}${ringU(u) ? ' · Perlu tinjauan posisi' : ''}${u.masalah ? ' · ' + esc(u.masalah) : ''}${u.gerbangKet ? ' · ' + esc(u.gerbangKet) : ''}` : '<small>Klik atau ketuk titik untuk melihat unit</small>Titik bermasalah ditandai bentuk berbeda. Peta skematik, bukan skala.';
+ const peta = `<div class="zona" role="group" aria-label="Zona peta">${chips}</div><div class="kv">${petaSVG(W, H)}</div><ul class="lg">${lg}</ul><div class="info" aria-live="polite">${info}</div>`;
+ if (!lebar) return peta;
+ const perhatian = U.filter(x => x.kes === 'tidak_layak' || ringU(x));
+ return `<div class="lebar"><div>${peta}</div><div class="samping"><h3>Perlu perhatian</h3>${perhatian.map(x => `<button type="button" data-pilih="${x.kode}"><span class="kd">${x.kode}</span><span>${areaLabel(x)}<small>${esc(x.masalah || (x.gerbangKet || ''))}</small></span></button>`).join('') || '<p class="kosong-g">Tidak ada unit bermasalah.</p>'}</div></div>`;
+}
+const petaKartu = () => `<section class="card gl"><div class="ch"><h2>Peta APAR</h2><span class="chip">${total} titik</span></div><div id="petaBody">${petaIsi()}</div></section>`;
+const gabungKartu = () => `<section class="card gl"><div class="ch"><h2>${modeKartu === 'titik' ? 'Kondisi per area' : 'Peta APAR'}</h2><span class="sak" role="group" aria-label="Tampilan"><button type="button" data-sak="titik" aria-pressed="${modeKartu === 'titik'}">Titik</button><button type="button" data-sak="peta" aria-pressed="${modeKartu === 'peta'}">Peta</button></span></div>${modeKartu === 'titik' ? areaIsi() : `<div id="petaBody">${petaIsi()}</div>`}</section>`;
+const petaLebar = () => `<section class="card gl"><div class="ch"><h2>Peta APAR</h2><span class="chip">${total} titik</span></div><div id="petaBody">${petaIsi()}</div></section>`;
+function insights() {
+ const t = trenKartu();
+ if (M.peta === 'p1') return `<div class="ins">${t}${petaKartu()}</div>`;
+ if (M.peta === 'p2') return `<div class="ins tiga">${t}${areaKartu()}${petaKartu()}</div>`;
+ if (M.peta === 'p3') return `<div class="ins">${t}${gabungKartu()}</div>`;
+ return `<div class="ins">${t}${areaKartu()}</div>`;
+}
+
+/* ---------- variasi halaman pemantau ---------- */
+function narasi() {
+ if (!total) return 'Belum ada APAR aktif. Ringkasan akan terisi setelah aset dan inspeksi tersedia.';
+ if (!sudah) return `Belum ada inspeksi bulan ini. ${total} APAR aktif menunggu pemeriksaan sebelum tenggat 30 Okt (sisa 26 hari).`;
+ return `${sudah} dari ${total} APAR sudah diperiksa bulan ini (${fp(persen)}%). ${nKes('tidak_layak')} unit dinyatakan tidak layak, ${BER.length} di antaranya temuan berat. ${LEW.length} temuan melewati target perbaikan dan ${TIN.length} inspeksi masih ditinjau karena bukti GPS kurang meyakinkan.`;
+}
+function laporKartu() {
+ return `<section class="card"><h2>Laporan siap cetak</h2><ul class="lap" style="margin-top:8px">
+  <li><div><b>Laporan PMS bulanan</b><small>Matriks ✓ X O Ø · Oktober 2026</small></div><button class="bt g" data-act="Unduh PDF">Unduh PDF</button></li>
+  <li><div><b>Rekap temuan<span class="baru" title="Belum ada di aplikasi; perlu dibangun">baru</span></b><small>${BER.length + LEW.length} temuan terbuka · ${LEW.length} lewat tenggat</small></div><button class="bt" data-act="Unduh rekap">Unduh</button></li>
+  <li><div><b>Kartu riwayat per unit</b><small>Pengganti kartu gantung, ${total} unit</small></div><button class="bt" data-act="Pilih unit">Pilih unit</button></li></ul></section>`;
+}
+function kepatuhanKartu() {
+ return `<section class="card gl kp"><h2>Kepatuhan Oktober</h2><p class="besar">${fp(persen)}%</p><p class="sb2">${sudah} dari ${total} unit · sisa 26 hari</p><div class="br">${AREA.filter(a => U.some(u => u.area === a)).map(a => { const us = U.filter(u => u.area === a), n = us.filter(u => !u.belum).length; return `<div><span>${areaTampil(a)}<b>${n}/${us.length}</b></span><i><b style="width:${n / us.length * 100}%"></b></i></div>`; }).join('') || '<p class="kosong-g">Belum ada APAR aktif.</p>'}</div></section>`;
+}
+function m2() {
+ const risiko = U.filter(u => u.kes === 'tidak_layak');
+ return `<div class="mg"><section class="card"><span class="eb">RINGKASAN</span><h2>Ringkasan untuk manajemen</h2><p class="nar">${narasi()}</p>
+  <div class="num3"><div><b>${fp(persen)}%</b><small>kepatuhan</small></div><div><b>${nKes('tidak_layak')}</b><small>unit tidak layak</small></div><div><b>${LEW.length}</b><small>lewat tenggat</small></div></div>
+  <h3 class="sh">Risiko terbuka</h3>${risiko.map(u => `<div class="risk"><span class="kode">${u.kode}</span><div><b>${u.kode} · ${areaLabel(u)}</b><span class="tag ${BER.includes(u.kode) ? 't-m' : LEW.includes(u.kode) ? 't-k' : 't-a'}">${BER.includes(u.kode) ? 'Berat' : LEW.includes(u.kode) ? 'Lewat tenggat' : 'Perlu perhatian'}</span><p>${esc(u.masalah)}</p></div></div>`).join('') || '<p class="muted">Tidak ada risiko terbuka.</p>'}</section>
+  <div class="kol">${laporKartu()}${kepatuhanKartu()}</div></div>`;
+}
+const m3strip = () => `<section class="card strip"><div><span class="eb">RINGKASAN BULAN INI</span><p class="nar">${narasi()}</p></div><div class="aks"><button class="bt g" data-act="Unduh PDF">Laporan PMS (PDF)</button><button class="bt" data-act="Unduh rekap">Rekap temuan<span class="baru">baru</span></button></div></section>`;
+
+/* ---------- susun halaman ---------- */
+function render() {
+ const L = M.lihat, p4 = M.peta === 'p4';
+ let h = '';
+ if (L === 'peta') h = insights() + (p4 ? petaLebar() : '');
+ else {
+  h = kepala();
+  const varian = RO && M.pem === 'm2';
+  if (L === 'kerangka') h += varian ? '' : (RO && M.pem === 'm3' ? m3strip() : '') + kpi();
+  else {
+   if (varian) h += m2();
+   else h += (RO && M.pem === 'm3' ? m3strip() : '') + kpi() + antrean();
+   if (L === 'semua') h += insights() + (p4 ? petaLebar() : '');
+  }
+ }
+ $('#main').innerHTML = h;
+ lapor();
+}
+const redrawPeta = () => { const b = $('#petaBody'); if (b) b.innerHTML = petaIsi(); lapor(); };
+
+/* ---------- pencarian ---------- */
+const GAYA = M.cari === 'modal' ? 'modal' : 'dropdown';
+let buka = false, q = M.cari === 'tutup' ? '' : g('q', '14'), idx = 0, daftar = [];
+function indeks() {
+ const r = [];
+ NAV.forEach(n => { if (n.adm && RO) return; n.i.forEach(([t, i]) => r.push({g:'Halaman', t, d: n.g ? n.g.charAt(0) + n.g.slice(1).toLowerCase() : 'Beranda', ik: ic(i)})); });
+ [['Cetak lembar stiker QR','Kegiatan · lembar stiker',true],['Buka laporan bulanan','Kegiatan · laporan',false],['Tambah aset','Data Induk · hanya admin',true],['Tetapkan tenggat temuan','Temuan · hanya admin',true]]
+  .forEach(([t, d, adm]) => { if (adm && RO) return; r.push({g:'Tindakan', t, d, ik: ic('list'), pil:'Aksi'}); });
+ U.forEach(u => r.push({g:'Aset', kode:u.kode, t:`${u.kode} · ${areaLabel(u)}`, d:`${u.lokasi} · ${u.tipe} ${u.kg} kg`}));
+ U.filter(u => u.masalah).forEach(u => r.push({g:'Temuan', kode:u.kode, t:u.masalah, d:`${u.kode} · ${areaLabel(u)} · ${BER.includes(u.kode) ? 'Berat' : LEW.includes(u.kode) ? 'Lewat tenggat' : 'Catatan'}`}));
+ U.filter(u => !u.belum).forEach(u => r.push({g:'Inspeksi', kode:u.kode, t:`Inspeksi ${u.kode}`, d:`${u.petugas} · ${u.waktu} · ${LABEL_KES[u.kes]}`}));
+ return r;
+}
+function cariHasil() {
+ const L = GAYA === 'modal' ? 5 : 4, toks = q.trim().toLowerCase().split(/\s+/).filter(Boolean), urut = ['Halaman','Tindakan','Aset','Temuan','Inspeksi'], cnt = {};
+ return indeks().filter(i => toks.length ? toks.every(t => (i.t + ' ' + i.d + ' ' + (i.kode || '')).toLowerCase().includes(t)) : (i.g === 'Halaman' || i.g === 'Tindakan'))
+  .filter(i => (cnt[i.g] = (cnt[i.g] || 0) + 1) <= L).sort((a, b) => urut.indexOf(a.g) - urut.indexOf(b.g));
+}
+const hl = s => { const t = q.trim().split(/\s+/)[0], e = esc(s); return t ? e.replace(new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'ig'), m => `<mark>${m}</mark>`) : e; };
+function htmlHasil() {
+ daftar = cariHasil(); if (idx >= daftar.length) idx = 0;
+ if (!daftar.length) return `<p class="kosong-h">Tidak ada hasil untuk “${esc(q)}”.<small>Coba kode aset, nama petugas, atau nama halaman.</small></p>`;
+ let h = '', gr = '';
+ daftar.forEach((i, j) => { if (i.g !== gr) { gr = i.g; h += `<div class="hg">${gr.toUpperCase()}</div>`; }
+  h += `<div class="hs ${j === idx ? 'aktif' : ''}" data-j="${j}" role="option" aria-selected="${j === idx}"><span class="k">${i.kode ? esc(i.kode) : i.ik}</span><div><b>${hl(i.t)}</b><small>${esc(i.d)}</small></div>${i.pil ? `<span class="pil">${i.pil}</span>` : ''}</div>`; });
+ return `<div role="listbox" aria-label="Hasil pencarian">${h}</div>`;
+}
+const footer = () => `<div class="pal-ft"><span><kbd>↑</kbd> <kbd>↓</kbd> pilih</span><span><kbd>Enter</kbd> buka</span><span><kbd>Esc</kbd> tutup</span><span class="ml">Kode QR tidak dapat dicari</span></div>`;
+function isiCari() { if (GAYA === 'modal') { const h = $('#hasil'); if (h) h.innerHTML = htmlHasil(); } else { const d = $('#dd'); d.innerHTML = htmlHasil() + footer(); } }
+function bukaCari() {
+ buka = true; idx = 0; const mandiri = top === window;
+ if (GAYA === 'modal') {
+  $('#modal').innerHTML = `<div class="tirai-c" id="tc"><div class="pal" role="dialog" aria-modal="true" aria-label="Pencarian"><div class="pal-in">${ic('search')}<input id="qm" autocomplete="off" placeholder="Cari APAR, temuan, halaman…" aria-label="Cari" value="${esc(q)}"><kbd>Esc</kbd></div><div class="hasil" id="hasil">${htmlHasil()}</div>${footer()}</div></div>`;
+  const i = $('#qm'); if (mandiri) i.focus({preventScroll:true});
+ } else { const d = $('#dd'), i = $('#qi'); d.hidden = false; i.value = q; i.setAttribute('aria-expanded', 'true'); d.innerHTML = htmlHasil() + footer(); if (mandiri) i.focus({preventScroll:true}); }
+ lapor();
+}
+function tutupCari() { buka = false; $('#modal').innerHTML = ''; const d = $('#dd'); if (d) { d.hidden = true; $('#qi').setAttribute('aria-expanded', 'false'); } if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); lapor(); }
+function pilihHasil(j) { const i = daftar[j]; if (!i) return; toast(`Pratinjau: membuka “${i.t}”`); tutupCari(); }
+function tombolCari(e) {
+ if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); if (daftar.length) { idx = (idx + (e.key === 'ArrowDown' ? 1 : -1) + daftar.length) % daftar.length; isiCari(); } }
+ else if (e.key === 'Enter') { e.preventDefault(); pilihHasil(idx); }
+}
+
+/* ---------- toast, pengukur tinggi, event ---------- */
+let tt; function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('tampil'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('tampil'), 2200); }
+function lapor() { if (parent !== window) parent.postMessage({k3:'tinggi', q:location.search, h:Math.ceil(document.body.getBoundingClientRect().height)}, '*'); }
+
+document.addEventListener('click', e => {
+ const t = e.target;
+ const kt = t.closest('[data-tab]'); if (kt) { tab = kt.dataset.tab; render(); return; }
+ const z = t.closest('[data-zona]'); if (z) { zona = z.dataset.zona; pilih = null; redrawPeta(); return; }
+ const sk = t.closest('[data-sak]'); if (sk) { modeKartu = sk.dataset.sak; render(); return; }
+ const tk = t.closest('.ttk'); if (tk) { pilih = tk.dataset.k; redrawPeta(); const n = document.querySelector(`.ttk[data-k="${pilih}"]`); if (n && top === window) n.focus({preventScroll:true}); return; }
+ const pl = t.closest('[data-pilih]'); if (pl) { pilih = pl.dataset.pilih; zona = 'Semua'; redrawPeta(); return; }
+ const ac = t.closest('[data-act]'); if (ac) { e.preventDefault(); toast(`Pratinjau: “${ac.dataset.act}” tidak dijalankan`); return; }
+ const hs = t.closest('.hs'); if (hs) { pilihHasil(+hs.dataset.j); return; }
+ if (t.closest('#qb')) { bukaCari(); return; }
+ if (t.id === 'tc') { tutupCari(); return; }
+ if (t.closest('#cut')) { toggleSb(); return; }
+ if (t.closest('#burger')) { $('#app').classList.add('buka'); return; }
+ if (t.id === 'tirai') { $('#app').classList.remove('buka'); return; }
+ if (buka && GAYA === 'dropdown' && !t.closest('#cari')) tutupCari();
+ if (t.closest('a[href="#"]')) e.preventDefault();
+});
+document.addEventListener('keydown', e => {
+ const mod = e.ctrlKey || e.metaKey, k = (e.key || '').toLowerCase();
+ if (mod && k === 'k') { e.preventDefault(); bukaCari(); return; }
+ if (mod && k === 'b' && !e.shiftKey && !e.altKey) { if (e.target.closest && e.target.closest('[contenteditable="true"]')) return; e.preventDefault(); toggleSb(); return; }
+ if (e.key === '/' && !/INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '')) { e.preventDefault(); bukaCari(); return; }
+ if (e.key === 'Escape' && buka) { tutupCari(); return; }
+ if (e.target.id === 'qi' || e.target.id === 'qm') tombolCari(e);
+ const tk = e.target.closest && e.target.closest('.ttk'); if (tk && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); tk.dispatchEvent(new MouseEvent('click', {bubbles:true})); }
+});
+document.addEventListener('input', e => { if (e.target.id === 'qi' || e.target.id === 'qm') { q = e.target.value; idx = 0; if (GAYA === 'dropdown' && !buka) { buka = true; $('#dd').hidden = false; } isiCari(); lapor(); } });
+document.addEventListener('focusin', e => { if (e.target.id === 'qi' && !buka) bukaCari(); });
+document.addEventListener('mouseover', e => { const hs = e.target.closest && e.target.closest('.hs'); if (hs && +hs.dataset.j !== idx) { idx = +hs.dataset.j; document.querySelectorAll('.hs').forEach(x => x.classList.toggle('aktif', +x.dataset.j === idx)); } });
+
+gambarSb(); gambarTb(); render();
+if (M.sb === 'ikon' && innerWidth >= 1024) { $('#app').classList.add('ikon'); $('#cut').dataset.t = `Buka menu (${KB})`; }
+if (g('buka', '') && innerWidth < 1024) $('#app').classList.add('buka');
+if (M.cari !== 'tutup') bukaCari();
+new ResizeObserver(lapor).observe(document.body);
+addEventListener('load', lapor);
+</script></body></html>
