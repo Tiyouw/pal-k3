@@ -47,6 +47,14 @@ class Dasbor extends Dashboard
     protected function getViewData(): array
     {
         $ringkasan = app(RingkasanDasbor::class);
+        $data = $ringkasan->data();
+        $pemantau = auth()->user()->isPemantau();
+
+        // Pemantau melihat ringkasan manajemen (tanpa antrean keputusan), jadi antrean tidak dihitung untuknya.
+        if ($pemantau) {
+            return [...$data, 'antrean' => null, 'pemantau' => true, 'risiko' => $ringkasan->risiko(), 'narasi' => $ringkasan->narasi($data)];
+        }
+
         $antrean = $ringkasan->antrean($this->tab)->paginate(6);
 
         if ($antrean->currentPage() > $antrean->lastPage()) {
@@ -54,7 +62,7 @@ class Dasbor extends Dashboard
             $antrean = $ringkasan->antrean($this->tab)->paginate(6);
         }
 
-        return [...$ringkasan->data(), 'antrean' => $antrean, 'pemantau' => auth()->user()->isPemantau()];
+        return [...$data, 'antrean' => $antrean, 'pemantau' => false];
     }
 
     private function bolehMenulis(): bool

@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\Masuk;
 use App\Filament\Pages\Dasbor;
+use App\Filament\Pencarian\PencarianPanel;
 use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -33,9 +34,13 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login(Masuk::class)
             ->darkMode(false)
+            ->favicon(fn (): string => asset('geofencing.svg'))
             ->font('Inter Variable', provider: LocalFontProvider::class)
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->sidebarWidth('16rem')
+            ->collapsedSidebarWidth('4.5rem')
+            // Ciut ke ikon (bukan hilang total): menu tetap terjangkau dengan satu klik atau Ctrl/Cmd+B.
+            ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
             ->brandLogo(fn () => new HtmlString(view('components.admin.merek')->render()))
             ->brandLogoHeight('2.25rem')
@@ -43,6 +48,15 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Kegiatan')->collapsible(false),
                 NavigationGroup::make('Data Induk')->collapsible(false),
             ])
+            // Pencarian "apa saja": halaman, tindakan, aset, temuan, inspeksi. Lihat PencarianPanel
+            // untuk aturan wewenang dan larangan mencari qr_token. Tanpa '/' sebagai pintasan:
+            // Filament mengikat pintasan secara global sehingga '/' akan membajak ketikan di kolom isian.
+            ->globalSearch(PencarianPanel::class)
+            ->globalSearchKeyBindings(['ctrl+k', 'command+k'])
+            ->globalSearchFieldKeyBindingSuffix()
+            ->globalSearchDebounce('250ms')
+            // Status sidebar desktop disetel sebelum Alpine menyala supaya tidak berkedip terbuka dulu.
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => auth()->check() ? view('filament.pages.skrip-sidebar') : '')
             ->renderHook(PanelsRenderHook::SIDEBAR_FOOTER, fn () => view('filament.pages.kaki-sidebar'))
             // Merek ditulis tetap di sini, tidak diambil dari APP_NAME, supaya
             // judul tab tidak ikut berubah jadi "Laravel" kalau .env di server

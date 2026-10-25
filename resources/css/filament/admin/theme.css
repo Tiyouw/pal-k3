@@ -24,10 +24,26 @@
 .fi-sidebar-item-active .fi-sidebar-item-label { color:#fff!important; font-weight:500; }
 .fi-sidebar-item-active .fi-sidebar-item-icon { color:var(--k3-amber)!important; }
 .fi-sidebar-item-button:focus-visible { outline:2px solid var(--k3-amber); outline-offset:-2px; }
-.k3-sidebar-user { display:grid; gap:2px; padding:14px 24px 16px; border-top:1px solid #12313a; }
-.k3-user-name { color:#fff; font-size:13px; font-weight:500; }
+.k3-kaki { flex:none; display:grid; gap:2px; padding:8px 12px 10px; border-top:1px solid #12313a; }
+.k3-ciut { display:flex; align-items:center; gap:12px; width:100%; min-height:40px; padding:0 12px; border-radius:8px; color:#9fb5ba; font-size:12.5px; text-align:left; }
+.k3-ciut:hover { background:rgba(255,255,255,.06); color:#fff; }
+.k3-ciut:focus-visible { outline:2px solid var(--k3-amber); outline-offset:-2px; }
+.k3-ciut-ikon { width:20px; height:20px; flex:none; }
+.k3-ciut-panah { transform-box:fill-box; transform-origin:center; }
+.k3-ciut-teks { flex:1; }
+.k3-kbd { font-size:10.5px; font-weight:500; line-height:1; padding:3px 6px; border:1px solid #31515a; border-radius:5px; color:#9eb9c1; white-space:nowrap; font-family:inherit; }
+.k3-sidebar-user { display:flex; align-items:center; gap:12px; min-height:48px; padding:8px 12px; }
+.k3-user-ini { flex:none; width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; font-size:12px; font-weight:500; display:grid; place-items:center; text-transform:uppercase; }
+.k3-user-teks { display:grid; min-width:0; }
+.k3-user-name { color:#fff; font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .k3-user-role { color:#7f9ba2; font-size:11px; }
 .k3-close-menu { display:none; }
+
+/* Tombol ciut/buka bawaan Filament di kepala sidebar diganti satu kontrol di dasar sidebar. */
+.fi-sidebar-header .fi-icon-btn { display:none!important; }
+/* Sidebar selalu setinggi layar: daftar menu menggulir di dalamnya, kaki (ciutkan + pengguna) tetap terlihat. */
+.fi-sidebar { display:flex; flex-direction:column; }
+.fi-sidebar-nav { flex:1 1 auto; min-height:0; }
 
 .fi-topbar > nav { box-shadow:none; border-bottom:1px solid #e4e9eb; background:#fff; }
 .fi-page { row-gap:24px; }
@@ -38,11 +54,11 @@
 .fi-input-wrp { border-radius:9px; }
 .fi-btn { border-radius:9px; min-height:40px; }
 
-.k3-merek { display:flex; align-items:center; gap:12px; text-align:left; line-height:1.4; font-weight:600; font-size:15px; color:inherit; }
-.k3-monogram { font-size:25px; letter-spacing:-.06em; }
-.k3-monogram > span { color:#f5b700; }
-.k3-merek small { display:block; font-size:9px; font-weight:400; letter-spacing:.13em; opacity:.7; margin-top:3px; }
-.fi-sidebar .k3-merek { color:white; }
+/* Pencarian global: dropdown bergaya sama dengan kartu panel. */
+.fi-global-search-field { min-width:min(380px,100%); }
+.fi-global-search-results-ctn { border-radius:14px; box-shadow:0 20px 50px #031e2526; }
+@media(min-width:640px) { .fi-global-search-results-ctn { max-width:32rem; } }
+.fi-global-search-result-group h3 { font-size:10.5px; font-weight:500; letter-spacing:.14em; text-transform:uppercase!important; color:#64767e; }
 
 /* Dasbor */
 .k3-dashboard { display:grid; gap:20px; min-width:0; }
@@ -96,6 +112,60 @@
 .k3-legend { list-style:none; padding:0; margin:16px 0 0; padding-top:14px; border-top:1px solid #1f4650; display:grid; grid-template-columns:1fr 1fr; gap:8px 18px; font-size:12px; color:#c0d1d5; }
 .k3-legend li { display:flex; align-items:center; gap:8px; }
 .k3-legend b { margin-left:auto; color:#fff; font-weight:600; }
+.k3-unit-tanpa_kesimpulan { background:#8ea6ad; }
+.k3-unit-tinjau { background:transparent; border:1.5px dashed #8fb8ff; }
+.k3-kosong-gelap { color:#c0d1d5; font-size:12.5px; line-height:1.7; }
+
+/* Kartu area/peta: sakelar dua tampilan berikon SVG, zona, kanvas peta. */
+.k3-kepala-kanan { display:flex; align-items:center; gap:12px; }
+.k3-area-jml { color:#b7cbd0; font-size:11px; white-space:nowrap; }
+.k3-sakelar { display:inline-flex; padding:3px; border-radius:10px; background:rgba(255,255,255,.08); }
+.k3-sakelar-btn { width:36px; height:32px; border-radius:7px; display:grid; place-items:center; color:#b7cbd0; }
+.k3-sakelar-btn svg { width:17px; height:17px; }
+.k3-sakelar-btn:hover { color:#fff; }
+.k3-sakelar-btn.is-on { background:#fff; color:#082a33; }
+.k3-sakelar-btn:focus-visible { outline:2px solid var(--k3-amber); outline-offset:2px; }
+.k3-zona { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; scrollbar-width:thin; }
+.k3-zona button { flex:none; min-height:32px; padding:6px 12px; border-radius:99px; background:rgba(255,255,255,.08); color:#cfe0e5; font-size:11px; white-space:nowrap; }
+.k3-zona button:hover { background:rgba(255,255,255,.14); }
+.k3-zona button.is-on { background:#fff; color:#082a33; }
+.k3-zona button:focus-visible { outline:2px solid var(--k3-amber); outline-offset:2px; }
+.k3-peta-kanvas { margin-top:8px; border-radius:12px; background:#061f26 radial-gradient(rgba(255,255,255,.08) 1px,transparent 1px) 0 0/16px 16px; overflow:hidden; }
+.k3-peta-svg { display:block; width:100%; height:auto; }
+.k3-peta-label { fill:#cfe0e5; font-size:11px; font-weight:500; font-family:inherit; }
+.k3-ttk { cursor:pointer; outline:none; }
+.k3-ttk .k3-hl { stroke:none; }
+.k3-ttk:focus-visible .k3-hl,.k3-ttk.is-pilih .k3-hl { stroke:#fff; stroke-width:2; }
+.k3-peta-info { margin-top:10px; padding:10px 12px; min-height:58px; border-radius:10px; background:rgba(255,255,255,.07); color:#e6eef1; font-size:12px; line-height:1.6; }
+.k3-peta-info small { display:block; color:#a9c0c7; }
+.k3-peta-catatan { margin-top:8px; color:#a9c0c7; font-size:11px; }
+
+/* Halaman pemantau: ringkasan untuk manajemen (hanya baca). */
+.k3-mg { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:16px; align-items:start; }
+.k3-kol { display:grid; gap:16px; min-width:0; }
+.k3-ringkasan h2,.k3-mg h2 { font-size:17px; letter-spacing:-.02em; }
+.k3-narasi { margin-top:12px; font-size:14px; line-height:1.75; color:#2b3b41; }
+.k3-num3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px; }
+.k3-num3 > div { background:#f2f5f6; border-radius:12px; padding:14px; }
+.k3-num3 b { display:block; font-size:26px; font-weight:500; letter-spacing:-.04em; line-height:1.2; }
+.k3-num3 small { color:#627078; font-size:11px; }
+.k3-sub { font-size:13px; margin:22px 0 4px; }
+.k3-risiko { display:grid; grid-template-columns:46px minmax(0,1fr); gap:14px; padding:12px 0; border-top:1px solid #edf0f1; align-items:center; }
+.k3-risiko p { margin-top:2px; font-size:13px; overflow-wrap:anywhere; }
+.k3-asset-code-merah { background:#fbe9ec; color:#b72c40; min-width:46px; height:46px; font-size:12px; }
+.k3-tag { margin-left:6px; padding:1px 8px; border-radius:99px; background:#eceff1; color:#4b535b; font-size:10.5px; font-weight:600; white-space:nowrap; }
+.k3-tag-merah { background:#fbe9ec; color:#b72c40; }
+.k3-tag-kuning { background:#fff3d1; color:#8a5a00; }
+.k3-lap { list-style:none; padding:0; margin:8px 0 0; }
+.k3-lap li { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 0; border-top:1px solid #edf0f1; }
+.k3-lap li:first-child { border-top:0; }
+.k3-lap small { display:block; color:#627078; font-size:11px; }
+.k3-kepatuhan-besar { margin-top:10px; font-size:42px; font-weight:300; letter-spacing:-.04em; line-height:1.1; }
+.k3-kepatuhan-sub { color:#c0d1d5; font-size:12px; }
+.k3-bar-list { display:grid; gap:12px; margin-top:16px; }
+.k3-bar-list span { display:flex; justify-content:space-between; font-size:12px; color:#e6eef1; }
+.k3-bar-list i { display:block; height:6px; margin-top:5px; border-radius:9px; background:rgba(255,255,255,.15); overflow:hidden; }
+.k3-bar-list u { display:block; height:100%; background:#f5b700; text-decoration:none; }
 
 .k3-eyebrow { display:block; font-size:10px; letter-spacing:.14em; color:#64767e; margin-bottom:6px; }
 .k3-queue-row { display:flex; gap:18px; align-items:center; padding:18px 0; border-top:1px solid #edf0f1; }
@@ -119,19 +189,37 @@
 .k3-pagination > div { display:flex; align-items:center; gap:12px; }
 .k3-dashboard :is(button,a):focus-visible { outline:3px solid #cf9500; outline-offset:4px; }
 
-.fi-simple-main { max-width:1080px; padding:0!important; background:transparent!important; box-shadow:none!important; --tw-ring-shadow:0 0 #0000; }
+/* Kerangka login Filament: kartu selalu di tengah dengan jarak ke tepi (bukan menempel di 641-1080px seperti sebelumnya). */
+.fi-simple-layout { display:grid!important; place-items:center; min-height:100dvh; padding:clamp(16px,4dvh,48px) clamp(16px,4vw,40px); }
+.fi-simple-main-ctn { display:block!important; width:100%; flex-grow:0; }
+.fi-simple-main { margin:0 auto!important; width:100%; max-width:960px; padding:0!important; background:transparent!important; box-shadow:none!important; --tw-ring-shadow:0 0 #0000; }
+
+/* Sidebar ciut ke ikon (desktop). Kelas k3-sb-ikon dipasang di <html> oleh skrip-sidebar. */
+@media(min-width:1024px) {
+    html.k3-sb-ikon .fi-sidebar-header { padding-inline:0; justify-content:center; }
+    html.k3-sb-ikon .fi-sidebar-header > div:first-child { display:block!important; opacity:1!important; }
+    html.k3-sb-ikon .fi-sidebar .k3-merek-teks { display:none; }
+    html.k3-sb-ikon .fi-sidebar-nav { padding-inline:8px; }
+    html.k3-sb-ikon .fi-sidebar-item-button { justify-content:center; padding-inline:0; }
+    html.k3-sb-ikon .k3-ciut,html.k3-sb-ikon .k3-sidebar-user { justify-content:center; padding-inline:0; }
+    html.k3-sb-ikon .k3-ciut-panah { transform:rotate(180deg); }
+    html.k3-sb-ikon .k3-kaki { padding-inline:8px; }
+}
 
 @media(min-width:1024px) { .fi-sidebar { top:0!important; height:100dvh!important; }.fi-topbar .fi-logo { display:none; } }
-@media(max-height:720px) and (min-width:1024px) { .fi-sidebar-header { height:60px; }.fi-sidebar-item-button { min-height:36px; padding-block:6px; }.fi-sidebar-nav-groups { row-gap:8px; }.k3-sidebar-user { padding-block:10px; } }
-@media(max-height:640px) and (min-width:1024px) { .fi-sidebar-header { height:52px; }.fi-sidebar-item-button { min-height:32px; padding-block:4px; }.fi-sidebar-nav-groups { row-gap:4px; }.fi-sidebar-nav { padding-top:4px; }.k3-sidebar-user { padding-block:8px; } }
+@media(max-height:720px) and (min-width:1024px) { .fi-sidebar-header { height:60px; }.fi-sidebar-item-button { min-height:36px; padding-block:6px; }.fi-sidebar-nav-groups { row-gap:8px; }.k3-kaki { padding-block:6px; }.k3-sidebar-user { min-height:40px; padding-block:4px; } }
+@media(max-height:640px) and (min-width:1024px) { .fi-sidebar-header { height:52px; }.fi-sidebar-item-button { min-height:32px; padding-block:4px; }.fi-sidebar-nav-groups { row-gap:4px; }.fi-sidebar-nav { padding-top:4px; }.k3-kaki { padding-block:4px; }.k3-ciut { min-height:34px; }.k3-sidebar-user { min-height:36px; padding-block:2px; } }
 @media(max-width:1250px) {
     .k3-stats { grid-template-columns:repeat(4,minmax(0,1fr)); }
     .k3-stat-primary { grid-column:1/-1; }
     .k3-row-actions { max-width:180px; }
+    .k3-mg { grid-template-columns:1fr; }
 }
 @media(max-width:1023px) {
     .k3-insights { grid-template-columns:1fr; }
     .k3-close-menu { display:block; width:100%; min-height:44px; margin-top:8px; text-align:left; color:#c5d6d9; font-size:12px; }
+    /* Di ponsel menu berupa laci: cukup "Tutup menu"; tombol ciutkan dan petunjuk Ctrl B hanya untuk desktop. */
+    .k3-ciut { display:none; }
 }
 @media(max-width:640px) {
     .fi-main { padding-inline:16px; padding-top:20px; }
@@ -149,6 +237,6 @@
     .k3-queue-detail { flex-basis:calc(100% - 60px); }
     .k3-row-actions { max-width:none; margin-left:58px; }
     .k3-legend { grid-template-columns:1fr; }
-    .fi-simple-main { margin:0!important; }
+    .k3-num3 { grid-template-columns:1fr; }
 }
 @media(prefers-reduced-motion:reduce) { .k3-pick { transition:none; } }

@@ -49,6 +49,8 @@ cd tests/qa-browser
 
 python3 verifikasi_tautan.py      # tautan silang halaman pengelolaan
 python3 verifikasi_perbaikan.py   # 10 pemeriksaan lintas tiga peran
+python3 verifikasi_panel.py       # sidebar ikon + Ctrl+B, kartu area/peta, pencarian Ctrl+K,
+                                  # ringkasan pemantau, dan ukuran kartu login di 10 layar
 python3 ukur_ui.py                # ukur kontras WCAG, kotak sentuh, luber
 python3 run_inspektur.py          # jelajah lane inspektur di ukuran ponsel
 python3 run_admin_pemantau.py     # jelajah lane admin dan pemantau

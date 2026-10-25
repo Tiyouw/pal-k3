@@ -58,7 +58,7 @@ transaksi: status `final`, `IssueGenerator::bangun()`, update `terakhir_dicek`,
 **Sedang**
 - **R4** `/i/{token}` hanya ber-middleware `auth` → admin/pemantau yang memindai
   membuat draf yatim atas nama mereka.
-- **R5** Definisi "perlu tinjauan" tak konsisten: widget `RingkasanKepatuhan`
+- **R5** Definisi "perlu tinjauan" tak konsisten: widget lama `RingkasanKepatuhan` (kini dihapus; definisi ada di `RingkasanDasbor::tinjauan()`)
   memasukkan `gps_lemah`, tapi antrean/lencana/aksi hanya `[perlu_review, jauh]`
   → angka widget tak pernah turun.
 - **R6** Pesan UI saat izin lokasi ditolak menjanjikan akan ditinjau Admin,

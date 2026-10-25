@@ -56,7 +56,8 @@ NIP data contoh: `1001` (administrator), `2001` (inspektur), `3001` (pemantau).
 
 - `app/Filament/Resources/` — resource panel: Asset, AssetType, ChecklistGroup,
   ChecklistItem, Division, Inspection, Issue.
-- `app/Filament/Widgets/RingkasanKepatuhan.php` — widget ringkasan kepatuhan.
+- `app/Filament/Pages/Dasbor.php` + `app/Services/RingkasanDasbor.php` — dasbor admin/pemantau (menggantikan widget lama `RingkasanKepatuhan`, sudah dihapus).
+- `app/Filament/Pencarian/PencarianPanel.php` — pencarian global panel (tanpa `qr_token`, wewenang per peran).
 - `app/Filament/Concerns/HanyaAdminBolehMenulis.php` — trait pembatas tulis
   (pemantau hanya baca).
 - `app/Http/Controllers/` — `LandingController`, `LaporanController`,

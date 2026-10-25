@@ -222,4 +222,180 @@ class RedesainPanelTest extends TestCase
             $this->assertGuest();
         }
     }
+
+    public function test_peta_memuat_semua_aset_bertitik_dengan_koordinat_di_dalam_kanvas(): void
+    {
+        $this->aset();
+        $peta = app(RingkasanDasbor::class)->data()['peta'];
+
+        $this->assertSame(0, $peta['tanpa_titik']);
+        $this->assertCount(35, $peta['zona']['Semua']['titik']);
+        $this->assertArrayHasKey('Gedung PIP · Lt. 1', $peta['zona']);
+        $this->assertSame(35, collect($peta['zona'])->except('Semua')->sum('total'));
+
+        foreach ($peta['zona'] as $zona) {
+            foreach ($zona['titik'] as $titik) {
+                $this->assertGreaterThanOrEqual(0, $titik['x']);
+                $this->assertLessThanOrEqual($zona['lebar'], $titik['x']);
+                $this->assertGreaterThanOrEqual(0, $titik['y']);
+                $this->assertLessThanOrEqual($zona['tinggi'], $titik['y']);
+                $this->assertTrue(is_finite($titik['x']) && is_finite($titik['y']));
+            }
+        }
+    }
+
+    public function test_peta_tidak_membocorkan_token_qr_dan_hanya_membawa_kolom_yang_perlu(): void
+    {
+        $asset = $this->aset();
+        $json = json_encode(app(RingkasanDasbor::class)->data()['peta']);
+
+        $this->assertStringNotContainsString($asset->qr_token, $json);
+        $this->assertStringNotContainsString('PAL-K3-', $json);
+        $this->assertStringNotContainsString('qr_token', $json);
+    }
+
+    public function test_aset_tanpa_koordinat_dihitung_tetapi_tidak_digambar(): void
+    {
+        $this->aset();
+        Asset::where('kode', '01D')->update(['lat' => null, 'lng' => null]);
+
+        $peta = app(RingkasanDasbor::class)->data()['peta'];
+
+        $this->assertSame(1, $peta['tanpa_titik']);
+        $this->assertCount(34, $peta['zona']['Semua']['titik']);
+        $this->assertNotContains('01D', collect($peta['zona']['Semua']['titik'])->pluck('kode')->all());
+    }
+
+    public function test_zona_satu_titik_atau_berkoordinat_sama_tidak_membagi_dengan_nol(): void
+    {
+        $this->aset();
+        $asset = Asset::where('kode', '01D')->firstOrFail();
+        Asset::query()->where('gedung', $asset->gedung)->where('lantai', $asset->lantai)->update(['lat' => $asset->lat, 'lng' => $asset->lng]);
+
+        $zona = app(RingkasanDasbor::class)->data()['peta']['zona'];
+
+        foreach ($zona as $z) {
+            foreach ($z['titik'] as $titik) {
+                $this->assertTrue(is_finite($titik['x']) && is_finite($titik['y']), 'koordinat harus berhingga');
+            }
+        }
+    }
+
+    public function test_peta_menandai_status_dan_tinjauan_posisi(): void
+    {
+        $asset = $this->aset();
+        $this->inspeksi($asset, ['kesimpulan' => 'tidak_layak', 'gate_status' => 'jauh']);
+        $this->inspeksi(Asset::where('kode', '02D')->firstOrFail(), ['kesimpulan' => 'layak_catatan']);
+        $this->inspeksi(Asset::where('kode', '03D')->firstOrFail(), ['gate_status' => 'jauh', 'ditinjau_pada' => now()]);
+
+        $titik = collect(app(RingkasanDasbor::class)->data()['peta']['zona']['Semua']['titik'])->keyBy('kode');
+
+        $this->assertSame('tidak_layak', $titik['01D']['status']);
+        $this->assertTrue($titik['01D']['tinjau']);
+        $this->assertSame('layak_catatan', $titik['02D']['status']);
+        $this->assertFalse($titik['02D']['tinjau']);
+        $this->assertFalse($titik['03D']['tinjau'], 'yang sudah ditinjau tidak lagi menunggu tinjauan');
+        $this->assertSame('belum', $titik['04D']['status']);
+    }
+
+    public function test_dasbor_admin_memuat_sakelar_ikon_peta_dan_zona_tanpa_token_qr(): void
+    {
+        $asset = $this->aset();
+        $this->panel(User::factory()->admin()->create());
+
+        $this->get('/admin')->assertOk()
+            ->assertSee('aria-label="Tampilan titik per area"', false)
+            ->assertSee('aria-label="Tampilan peta"', false)
+            ->assertSee('k3-peta-svg', false)
+            ->assertSee('Peta skematik, bukan skala')
+            ->assertDontSee($asset->qr_token);
+    }
+
+    public function test_pemantau_melihat_ringkasan_manajemen_tanpa_antrean_dan_aksi_tulis(): void
+    {
+        $asset = $this->aset();
+        Issue::create(['asset_id' => $asset->id, 'item' => 'Segel hilang uji', 'severity' => 'berat', 'status' => 'terbuka', 'target_selesai' => today()->subDay()]);
+        $this->panel(User::factory()->pemantau()->create());
+
+        $this->get('/admin')->assertOk()
+            ->assertSee('Ringkasan untuk manajemen')
+            ->assertSee('Risiko terbuka')
+            ->assertSee('Segel hilang uji')
+            ->assertSee('Lewat tenggat')
+            ->assertSee('Laporan siap cetak')
+            ->assertSee(route('laporan.pms'), false)
+            ->assertSee(route('laporan.temuan'), false)
+            ->assertSee('Akses hanya baca')
+            ->assertDontSee('PERLU KEPUTUSAN ANDA')
+            ->assertDontSee('Tetapkan tenggat')
+            ->assertDontSee('Tandai selesai')
+            ->assertDontSee('Tinjau posisi')
+            ->assertDontSee('Data Induk');
+    }
+
+    public function test_admin_tidak_melihat_ringkasan_manajemen_pemantau(): void
+    {
+        $this->aset();
+        $this->panel(User::factory()->admin()->create());
+
+        $this->get('/admin')->assertOk()->assertSee('PERLU KEPUTUSAN ANDA')->assertDontSee('Ringkasan untuk manajemen');
+    }
+
+    public function test_risiko_mengurutkan_berat_dulu_lalu_tenggat_terdekat(): void
+    {
+        $asset = $this->aset();
+        $buat = fn (string $item, string $berat, ?string $tenggat) => Issue::create(['asset_id' => $asset->id, 'item' => $item, 'severity' => $berat, 'status' => 'terbuka', 'target_selesai' => $tenggat]);
+        $buat('sedang-tanpa-tenggat', 'sedang', null);
+        $buat('berat-tanpa-tenggat', 'berat', null);
+        $buat('berat-lusa', 'berat', today()->addDays(2)->toDateString());
+        $buat('berat-kemarin', 'berat', today()->subDay()->toDateString());
+        Issue::create(['asset_id' => $asset->id, 'item' => 'sudah-selesai', 'severity' => 'berat', 'status' => 'selesai']);
+
+        $urutan = app(RingkasanDasbor::class)->risiko()->pluck('item')->all();
+
+        $this->assertSame(['berat-kemarin', 'berat-lusa', 'berat-tanpa-tenggat', 'sedang-tanpa-tenggat'], $urutan);
+    }
+
+    public function test_narasi_mengikuti_keadaan_data(): void
+    {
+        $ringkasan = app(RingkasanDasbor::class);
+
+        $this->assertStringContainsString('Belum ada APAR aktif', $ringkasan->narasi(['total' => 0]));
+        $this->assertStringContainsString('Belum ada inspeksi bulan ini', $ringkasan->narasi(['total' => 35, 'diperiksa' => 0, 'hari' => 9]));
+
+        $teks = $ringkasan->narasi(['total' => 35, 'diperiksa' => 22, 'persen' => 62.9, 'hari' => 9, 'kondisi' => collect(['tidak_layak' => 4]),
+            'jumlah' => ['berat' => 2, 'lewat' => 1, 'posisi' => 3]]);
+        $this->assertStringContainsString('22 dari 35 APAR', $teks);
+        $this->assertStringContainsString('62,9%', $teks);
+        $this->assertStringContainsString('4 unit dinyatakan tidak layak', $teks);
+        $this->assertStringContainsString('2 temuan berat dan 1 temuan lewat tenggat', $teks);
+        $this->assertStringContainsString('3 inspeksi', $teks);
+    }
+
+    public function test_merek_geofencing_di_panel_login_dan_favicon(): void
+    {
+        $this->aset();
+        $this->get('/admin/login')->assertOk()
+            ->assertSee('Geofencing')
+            ->assertSee('geofencing.svg', false)
+            ->assertSee('k3-merek-tanda', false)
+            ->assertDontSee('k3-monogram', false)
+            ->assertDontSee('k3SidebarDesktop', false);
+
+        $this->get('/masuk')->assertOk()->assertSee('Geofencing')->assertSee('k3-merek-tanda', false);
+    }
+
+    public function test_panel_memuat_skrip_sidebar_dan_kaki_yang_menempel_untuk_pengguna_masuk(): void
+    {
+        $this->aset();
+        $this->panel(User::factory()->admin()->create(['name' => 'Admin Uji Coba']));
+
+        $this->get('/admin')->assertOk()
+            ->assertSee('k3SidebarDesktop', false)
+            ->assertSee('aria-keyshortcuts="Control+B Meta+B"', false)
+            ->assertSee('Ciutkan menu')
+            ->assertSee('Admin Uji Coba')
+            ->assertSee('Administrator K3')
+            ->assertSee('geofencing.svg', false);
+    }
 }

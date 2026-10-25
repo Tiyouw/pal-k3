@@ -7,6 +7,7 @@ use App\Models\Inspection;
 use App\Models\Issue;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class RingkasanDasbor
 {
@@ -65,10 +66,148 @@ class RingkasanDasbor
             'diperiksa' => $diperiksa,
             'persen' => $total ? round($diperiksa / $total * 100, 1) : 0,
             'jumlah' => ['berat' => $this->antrean('berat')->count(), 'lewat' => $this->antrean('lewat')->count(), 'posisi' => $this->tinjauan()->count(), 'belum' => $total - $diperiksa],
-            'area' => $aset->groupBy(fn (Asset $a) => implode(' · ', array_filter([$a->gedung ?: 'Area belum diisi', $a->labelLantai()]))),
+            'area' => $aset->groupBy(fn (Asset $a) => $this->namaArea($a)),
             'kondisi' => $kondisi,
             'tren' => $tren,
             'hari' => (int) ceil(now()->diffInDays(now()->endOfMonth())),
+            'peta' => $this->peta($aset),
         ];
+    }
+
+    /** Nama area satu baris ("Gedung PIP · Lt. 1"), kunci pengelompokan kartu area dan chip zona peta. */
+    public function namaArea(Asset $a): string
+    {
+        return implode(' · ', array_filter([$a->gedung ?: 'Area belum diisi', $a->labelLantai()]));
+    }
+
+    /**
+     * Zona peta: "Semua" ditambah satu zona per area. Proyeksi dihitung di sini (bukan di peramban)
+     * supaya SVG-nya ikut dirender peladen, bisa diuji, dan tidak ada koordinat mentah yang perlu
+     * diolah klien. Yang keluar hanya kode, label, titik, dan status; qr_token tidak pernah ikut.
+     *
+     * Aset tanpa lat/lng tidak digambar, tapi dihitung di 'tanpa_titik' supaya tidak hilang diam-diam.
+     *
+     * @param  Collection<int, Asset>  $aset  aset aktif dengan inspeksi final terakhir bulan ini
+     * @return array{zona: array<string, array<string, mixed>>, tanpa_titik: int}
+     */
+    public function peta(Collection $aset, int $lebar = 460, int $tinggi = 320): array
+    {
+        $perluTinjau = $this->tinjauan()->pluck('asset_id')->flip();
+
+        $titik = $aset->filter(fn (Asset $a) => $a->lat !== null && $a->lng !== null)->map(function (Asset $a) use ($perluTinjau): array {
+            $inspeksi = $a->inspections->first();
+
+            return [
+                'kode' => $a->kode,
+                'area' => $this->namaArea($a),
+                'gedung' => $a->gedung ?: 'Area belum diisi',
+                'lantai' => $a->labelLantai(),
+                'lokasi' => $a->labelLokasi(),
+                'lat' => $a->lat,
+                'lng' => $a->lng,
+                'status' => $inspeksi ? ($inspeksi->kesimpulan ?: 'tanpa_kesimpulan') : 'belum',
+                'tinjau' => $perluTinjau->has($a->id),
+            ];
+        })->values();
+
+        $zona = ['Semua' => $this->zona('Semua', $titik, true, $lebar, $tinggi)];
+
+        foreach ($titik->groupBy('area') as $nama => $isi) {
+            $zona[$nama] = $this->zona($nama, $isi->values(), false, $lebar, $tinggi);
+        }
+
+        return ['zona' => $zona, 'tanpa_titik' => $aset->count() - $titik->count()];
+    }
+
+    /** @return array<string, mixed> */
+    private function zona(string $nama, Collection $titik, bool $geserLantai, int $lebar, int $tinggi): array
+    {
+        $tepiX = 44;
+        $tepiY = 40;
+        $lat = $titik->pluck('lat');
+        $lng = $titik->pluck('lng');
+        [$lat0, $lat1] = $this->rentang($lat);
+        [$lng0, $lng1] = $this->rentang($lng);
+
+        // Lantai di gedung yang sama sering berbagi koordinat; digeser mendatar supaya tidak bertumpuk.
+        $geser = [];
+        if ($geserLantai) {
+            foreach ($titik->groupBy('gedung') as $gedung => $isi) {
+                $lantai = $isi->pluck('lantai')->unique()->sort()->values();
+                if ($lantai->count() > 1) {
+                    foreach ($lantai as $i => $l) {
+                        $geser[$gedung][(string) $l] = ($i - ($lantai->count() - 1) / 2) * 16;
+                    }
+                }
+            }
+        }
+
+        $titik = $titik->map(function (array $t) use ($tepiX, $tepiY, $lebar, $tinggi, $lat1, $lat0, $lng0, $lng1, $geser): array {
+            $t['x'] = round($tepiX + ($t['lng'] - $lng0) / ($lng1 - $lng0) * ($lebar - 2 * $tepiX) + ($geser[$t['gedung']][(string) $t['lantai']] ?? 0), 1);
+            $t['y'] = round($tepiY + ($lat1 - $t['lat']) / ($lat1 - $lat0) * ($tinggi - 2 * $tepiY), 1);
+
+            return $t;
+        });
+
+        // Label gedung hanya di zona "Semua", dan hanya kalau titiknya mengelompok (label di atas sebaran luas menyesatkan).
+        $label = [];
+        if ($nama === 'Semua') {
+            foreach ($titik->groupBy('gedung') as $gedung => $isi) {
+                $xs = $isi->pluck('x');
+                $ys = $isi->pluck('y');
+                if ($xs->max() - $xs->min() > $lebar * .45 || $ys->max() - $ys->min() > $tinggi * .45) {
+                    continue;
+                }
+                $label[] = ['teks' => $gedung, 'x' => round(min(max($xs->avg(), 70), $lebar - 70), 1), 'y' => round(max($ys->min() - 17, 14), 1)];
+            }
+        }
+
+        return [
+            'nama' => $nama,
+            'titik' => $titik->all(),
+            'label' => $label,
+            'total' => $titik->count(),
+            'diperiksa' => $titik->where('status', '!=', 'belum')->count(),
+            'lebar' => $lebar,
+            'tinggi' => $tinggi,
+        ];
+    }
+
+    /** @return array{0: float, 1: float} */
+    private function rentang(Collection $nilai): array
+    {
+        $min = (float) $nilai->min();
+        $max = (float) $nilai->max();
+
+        // Satu titik (atau semua sama) tidak boleh membagi dengan nol.
+        return $max - $min < 1e-5 ? [$min - 5e-5, $max + 5e-5] : [$min, $max];
+    }
+
+    /** Temuan terbuka paling mendesak untuk ringkasan pemantau: berat dulu, lalu yang tenggatnya paling dekat. */
+    public function risiko(int $batas = 5): Collection
+    {
+        return $this->temuan()->with('asset')
+            ->orderByRaw("case severity when 'berat' then 0 else 1 end")
+            ->orderByRaw('target_selesai is null')->orderBy('target_selesai')->orderBy('id')
+            ->limit($batas)->get();
+    }
+
+    /** Kalimat ringkasan untuk manajemen, dihitung dari angka yang sama dengan kartu di dasbor. */
+    public function narasi(array $data): string
+    {
+        if ($data['total'] === 0) {
+            return 'Belum ada APAR aktif. Ringkasan akan terisi setelah aset dan inspeksi tersedia.';
+        }
+
+        if ($data['diperiksa'] === 0) {
+            return "Belum ada inspeksi bulan ini. {$data['total']} APAR aktif menunggu pemeriksaan sebelum akhir bulan (sisa {$data['hari']} hari).";
+        }
+
+        $persen = number_format($data['persen'], 1, ',', '.');
+        $tidakLayak = $data['kondisi']['tidak_layak'] ?? 0;
+
+        return "{$data['diperiksa']} dari {$data['total']} APAR sudah diperiksa bulan ini ({$persen}%). {$tidakLayak} unit dinyatakan tidak layak pakai. "
+            ."Ada {$data['jumlah']['berat']} temuan berat dan {$data['jumlah']['lewat']} temuan lewat tenggat yang belum selesai, "
+            ."serta {$data['jumlah']['posisi']} inspeksi yang menunggu tinjauan posisi.";
     }
 }
