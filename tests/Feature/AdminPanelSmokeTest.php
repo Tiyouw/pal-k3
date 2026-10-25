@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Asset;
 use App\Models\User;
 use Database\Seeders\AparSeeder;
 use Database\Seeders\MasterSeeder;
@@ -29,7 +30,7 @@ class AdminPanelSmokeTest extends TestCase
 
         // Wajib state admin(): default factory adalah inspektur dan akan ditolak 403.
         $this->admin = User::factory()->admin()->create([
-            'name'  => 'Admin K3',
+            'name' => 'Admin K3',
             'email' => 'admin@pal.test',
         ]);
     }
@@ -48,7 +49,7 @@ class AdminPanelSmokeTest extends TestCase
         $response->assertOk();
         // Form Filament dirender Livewire, jadi penanda yang dicari wire:*, bukan name="email".
         $response->assertSee('wire:snapshot', escape: false);
-        $response->assertSee('data.email', escape: false);
+        $response->assertSee('data.nip', escape: false);
         $response->assertSee('data.password', escape: false);
     }
 
@@ -78,13 +79,13 @@ class AdminPanelSmokeTest extends TestCase
     public static function halamanDaftar(): array
     {
         return [
-            'divisi'          => ['/admin/divisions'],
-            'tipe objek'      => ['/admin/asset-types'],
-            'aset'            => ['/admin/assets'],
-            'grup checklist'  => ['/admin/checklist-groups'],
-            'item checklist'  => ['/admin/checklist-items'],
-            'inspeksi'        => ['/admin/inspections'],
-            'temuan'          => ['/admin/issues'],
+            'divisi' => ['/admin/divisions'],
+            'tipe objek' => ['/admin/asset-types'],
+            'aset' => ['/admin/assets'],
+            'grup checklist' => ['/admin/checklist-groups'],
+            'item checklist' => ['/admin/checklist-items'],
+            'inspeksi' => ['/admin/inspections'],
+            'temuan' => ['/admin/issues'],
         ];
     }
 
@@ -101,9 +102,9 @@ class AdminPanelSmokeTest extends TestCase
     public static function halamanBuat(): array
     {
         return [
-            'buat divisi'     => ['/admin/divisions/create'],
+            'buat divisi' => ['/admin/divisions/create'],
             'buat tipe objek' => ['/admin/asset-types/create'],
-            'buat aset'       => ['/admin/assets/create'],
+            'buat aset' => ['/admin/assets/create'],
         ];
     }
 
@@ -120,7 +121,7 @@ class AdminPanelSmokeTest extends TestCase
     #[Test]
     public function halaman_ubah_aset_terbuka(): void
     {
-        $aset = \App\Models\Asset::where('kode', '01D')->firstOrFail();
+        $aset = Asset::where('kode', '01D')->firstOrFail();
 
         $this->actingAs($this->admin)
             ->get("/admin/assets/{$aset->getKey()}/edit")

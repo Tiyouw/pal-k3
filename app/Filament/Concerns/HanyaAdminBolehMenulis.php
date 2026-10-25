@@ -22,6 +22,11 @@ trait HanyaAdminBolehMenulis
         return auth()->user()?->isAdmin() ?? false;
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::getNavigationGroup() !== 'Data Induk' || (auth()->user()?->isAdmin() ?? false);
+    }
+
     public static function canCreate(): bool
     {
         return static::penggunaAdalahAdmin();

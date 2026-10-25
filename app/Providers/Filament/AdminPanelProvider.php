@@ -2,21 +2,24 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Masuk;
+use App\Filament\Pages\Dasbor;
+use Filament\FontProviders\LocalFontProvider;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationItem;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
+use Filament\View\PanelsRenderHook;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -27,7 +30,16 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(Masuk::class)
+            ->darkMode(false)
+            ->font('Inter Variable', provider: LocalFontProvider::class)
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->sidebarWidth('16rem')
+            ->maxContentWidth('full')
+            ->brandLogo(fn () => new HtmlString(view('components.admin.merek')->render()))
+            ->brandLogoHeight('2.25rem')
+            ->navigationGroups(['Kegiatan', 'Data Induk'])
+            ->renderHook(PanelsRenderHook::SIDEBAR_FOOTER, fn () => view('filament.pages.kaki-sidebar'))
             // Merek ditulis tetap di sini, tidak diambil dari APP_NAME, supaya
             // judul tab tidak ikut berubah jadi "Laravel" kalau .env di server
             // belum disetel. Sebelum ini judulnya terbaca "Dasbor - Laravel".
@@ -38,7 +50,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                Dasbor::class,
             ])
             /*
              * Halaman pengelolaan di luar panel disambungkan ke sidebar.
@@ -67,14 +79,6 @@ class AdminPanelProvider extends PanelProvider
                     ->group('Kegiatan')
                     ->sort(9)
                     ->visible(fn (): bool => auth()->user()?->bolehPanel() ?? false),
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                Widgets\AccountWidget::class,
-                // FilamentInfoWidget dibuang: widget itu memasang "v3.3.55
-                // Dokumentasi GitHub" di dasbor, yaitu perkakas pembangun yang
-                // tak berarti bagi petugas K3 dan membocorkan versi kerangka
-                // kerja ke pengguna panel.
             ])
             ->middleware([
                 EncryptCookies::class,

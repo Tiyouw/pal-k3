@@ -1,87 +1,45 @@
-@extends('layouts.petugas')
-
-@section('judul', 'Masuk Petugas')
-
-@section('isi')
-    <div style="padding-top:32px">
-        <div style="text-align:center; margin-bottom:24px">
-            <div style="width:72px; height:72px; margin:0 auto 14px; border-radius:20px;
-                        background:var(--biru); color:#fff; display:flex; align-items:center;
-                        justify-content:center; font-size:2rem" aria-hidden="true">&#128680;</div>
-            <h1 style="font-size:1.35rem; margin:0 0 4px; color:var(--biru-tua)">Inspeksi K3</h1>
-            <p class="redup" style="margin:0">Divisi K3LH &mdash; PT PAL Indonesia</p>
-        </div>
-
-        <div class="kartu">
-            <form method="POST" action="{{ route('petugas.masuk.kirim') }}" novalidate>
-                @csrf
-
-                <div style="margin-bottom:16px">
-                    <label class="judul" for="nip">NIP</label>
-                    {{--
-                        inputmode numeric memunculkan papan tombol angka, tetapi tipe
-                        tetap text: NIP berawalan nol tidak boleh dipangkas, dan
-                        sebagian NIP memuat huruf.
-                        autocomplete username agar pengelola sandi ponsel mengenalinya.
-                    --}}
-                    <input type="text" id="nip" name="nip" value="{{ old('nip') }}"
-                           inputmode="numeric" autocomplete="username"
-                           autocapitalize="off" autocorrect="off" spellcheck="false"
-                           required autofocus
-                           placeholder="Contoh: 198703152010011002"
-                           aria-describedby="{{ $errors->has('nip') ? 'galat-nip' : '' }}"
-                           @if($errors->has('nip')) aria-invalid="true" @endif>
-                    @error('nip')
-                        <p class="galat" id="galat-nip" role="alert">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <div style="margin-bottom:16px">
-                    <label class="judul" for="password">Kata sandi</label>
-                    <div style="position:relative">
-                        <input type="password" id="password" name="password"
-                               autocomplete="current-password" required
-                               style="padding-right:58px"
-                               @if($errors->has('password')) aria-invalid="true" @endif>
-                        {{-- Tombol lihat sandi: mengetik sandi di bawah sinar matahari
-                             sambil memakai sarung tangan sering salah tekan. --}}
-                        <button type="button" id="lihat"
-                                aria-label="Tampilkan kata sandi" aria-pressed="false"
-                                style="position:absolute; right:4px; top:4px; width:48px; height:44px;
-                                       border:0; background:transparent; font-size:1.1rem; cursor:pointer">
-                            &#128065;
-                        </button>
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#031e25"><meta name="robots" content="noindex, nofollow">
+    <title>Masuk Petugas — Inspeksi K3 APAR</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('geofencing.svg') }}">
+    @vite('resources/css/masuk.css')
+</head>
+<body class="k3-login-body">
+<main class="k3-login-main">
+    <div class="k3-login-shell">
+        <x-admin.cerita-masuk />
+        <section class="k3-login-form-panel" aria-labelledby="judul-masuk">
+            <a href="{{ route('landing') }}" class="k3-login-back">← Kembali ke beranda</a>
+            <div class="k3-login-form-content"><span class="k3-login-eyebrow">PORTAL PETUGAS</span><h2 id="judul-masuk">Siap menjaga keselamatan?</h2><p class="k3-login-intro">Masuk dengan NIP untuk memulai pemeriksaan dan mencatat kondisi APAR di lapangan.</p>
+                @if(session('pesan'))<div class="k3-login-notice" role="status">{{ session('pesan') }}</div>@endif
+                <form method="POST" action="{{ route('petugas.masuk.kirim') }}" novalidate>
+                    @csrf
+                    <div class="k3-login-field"><label for="nip">NIP</label><input type="text" id="nip" name="nip" value="{{ old('nip') }}" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required maxlength="32" placeholder="Masukkan NIP Anda" @if($errors->has('nip')) aria-invalid="true" aria-describedby="galat-nip" @endif>
+                        @error('nip')<p class="k3-login-error" id="galat-nip" role="alert">{{ $message }}</p>@enderror
                     </div>
-                    @error('password')
-                        <p class="galat" role="alert">{{ $message }}</p>
-                    @enderror
-                </div>
-
-                <label style="display:flex; align-items:center; gap:10px; margin-bottom:20px; min-height:44px">
-                    <input type="checkbox" name="ingat" value="1" style="width:22px; height:22px"
-                           @checked(old('ingat'))>
-                    <span>Ingat perangkat ini</span>
-                </label>
-
-                <button type="submit" class="tbl tbl-utama">Masuk</button>
-            </form>
-        </div>
-
-        <p class="redup" style="text-align:center; margin-top:20px; font-size:.82rem">
-            Lupa kata sandi? Hubungi Administrator K3 Divisi K3LH.
-        </p>
+                    <div class="k3-login-field"><label for="password">Kata sandi</label><div class="k3-password-wrap"><input type="password" id="password" name="password" autocomplete="current-password" required placeholder="Masukkan kata sandi" @if($errors->has('password')) aria-invalid="true" aria-describedby="galat-password" @endif><button type="button" class="k3-password-toggle" id="lihat" aria-label="Tampilkan kata sandi" aria-pressed="false">Lihat</button></div>
+                        @error('password')<p class="k3-login-error" id="galat-password" role="alert">{{ $message }}</p>@enderror
+                    </div>
+                    <label class="k3-login-remember"><input type="checkbox" name="ingat" value="1" @checked(old('ingat'))>Ingat perangkat ini</label>
+                    <button type="submit" class="k3-login-submit">Masuk <span aria-hidden="true">→</span></button>
+                </form>
+                <p class="k3-login-help">Lupa kata sandi? Hubungi Administrator K3 Divisi K3LH.</p>
+                <div class="k3-login-switch">Administrator atau Pemantau? <a href="{{ route('filament.admin.auth.login') }}">Masuk ke panel pengelolaan ↗</a></div>
+            </div><p class="k3-login-foot">Gunakan akun Anda sendiri untuk setiap pemeriksaan.</p>
+        </section>
     </div>
-@endsection
-
-@push('skrip')
+</main>
 <script>
     document.getElementById('lihat').addEventListener('click', function () {
-        const isian  = document.getElementById('password');
-        const tampil = isian.type === 'password';
-
-        isian.type = tampil ? 'text' : 'password';
-        this.setAttribute('aria-pressed', tampil ? 'true' : 'false');
-        this.setAttribute('aria-label', tampil ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+        const input = document.getElementById('password');
+        const visible = input.type === 'password';
+        input.type = visible ? 'text' : 'password';
+        this.setAttribute('aria-pressed', String(visible));
+        this.setAttribute('aria-label', visible ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi');
+        this.textContent = visible ? 'Tutup' : 'Lihat';
     });
 </script>
-@endpush
+</body>
+</html>

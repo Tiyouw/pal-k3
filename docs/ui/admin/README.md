@@ -2,7 +2,23 @@
 
 Dokumen ini menjelaskan dua usulan tampilan dasbor panel admin. Ditulis supaya orang atau AI lain bisa paham konteksnya tanpa membaca riwayat obrolan.
 
-Status: **sketsa statis, belum diimplementasikan**. Panel `/admin` yang sedang live masih tampilan Filament bawaan. Belum ada keputusan final A2 atau D. Rekomendasi sementara: A2, lalu peta mini D diletakkan di posisi kartu "Sebaran per area".
+Status: **varian A2 sudah diimplementasikan di kode aplikasi**. Sketsa A2 dan D di folder ini tetap disimpan sebagai referensi awal. Perubahan belum dipublikasikan ke situs produksi.
+
+## Hasil brainstorming dan implementasi
+
+- A2 dipilih sebagai dasar: sidebar `#031e25`, aksen amber, kartu kepatuhan berilustrasi APAR, tren enam bulan, sebaran per area, kondisi unit, dan antrean keputusan. Inter di-host sendiri agar konsisten dengan halaman publik dan tidak membutuhkan Google Fonts.
+- Sebaran per area dipakai sesuai A2. Peta mini D tidak ditambahkan karena pengelompokan gedung/lantai lebih terbaca untuk unit berkoordinat rapat.
+- Tab awal **Temuan berat**; kartu KPI membuka kategori antrean. Entri dipaginasi, enam per halaman. Kepatuhan membuka pusat laporan.
+- Angka berasal dari basis data. Kepatuhan dan tren menghitung APAR aktif dengan inspeksi final, satu kali per unit per bulan. Kondisi mengambil inspeksi final terbaru pada periode berjalan. Temuan terbuka dan tinjauan yang belum selesai tetap muncul lintas periode, termasuk unit yang sudah dinonaktifkan.
+- Tinjauan meliputi `jauh`, `perlu_review`, `gps_lemah`, dan `tanpa_gps`. Aksi **Tinjau posisi** meminta alasan dan mencatat peninjau serta waktu, tanpa mengubah bukti GPS asli. Belum ada konsep persetujuan/penolakan terpisah di model, sehingga label sketsa “Terima posisi”/“Minta ulang” disesuaikan dengan alur tinjauan yang tersedia.
+- **Tetapkan tenggat** dan **Tandai selesai** bekerja lewat modal Filament. Penyelesaian mewajibkan catatan tindak lanjut. Semua aksi dijaga otorisasi server; Pemantau hanya membaca, menu Data Induk disembunyikan, dan kartu laporan ditampilkan paling atas.
+- Tombol pengingat petugas tidak ditampilkan karena belum ada kanal pengiriman pengingat. Daftar belum diperiksa menyediakan kartu pemeriksaan.
+- Login `/masuk` dan `/admin/login` memakai identitas visual yang sama dan NIP. Login panel tetap dibatasi ke Administrator aktif dan Pemantau aktif. Ingat perangkat, lihat sandi, validasi, pembatasan percobaan, dan arah tujuan sesi dipertahankan.
+- Tema panel mengimpor CSS terkompilasi Filament 3 lewat Vite, terpisah dari Tailwind 4 halaman publik. Tabel/form resource ikut memakai tema panel. Tidak ada perubahan skema basis data.
+
+Verifikasi: PHPUnit mencakup perhitungan, antrean, paginasi, validasi aksi, hak Pemantau, dan login NIP. Pemeriksaan Chromium pada 1440 dan 390 px mencakup login, tab, paginasi, menu ponsel, resource, dan laporan. Tidak ditemukan galat JavaScript atau halaman melebar. Data seed belum memiliki inspeksi, jadi tangkapan `implementasi-*` dan `antrean-*` diambil dari basis data sementara berisi inspeksi dan temuan contoh (bukan data asli, tidak ikut repositori).
+
+Tangkapan implementasi ada di `shots/sebelum-*.png`, `shots/implementasi-*.png`, `shots/antrean-*.png`, dan `shots/menu-ponsel.png`. Login ada di `../login/`.
 
 ## Latar singkat sistem
 
@@ -96,9 +112,9 @@ docs/ui/admin/
 └── shots/           ← hasil render
 ```
 
-## Catatan untuk implementasi ke Filament
+## Rencana awal integrasi Filament (arsip)
 
-Belum dikerjakan. Rencananya:
+Rencana berikut dicatat saat pembuatan sketsa; keputusan implementasi akhir ada di atas:
 
 1. Tema kustom lewat `->viteTheme()` di `app/Providers/Filament/AdminPanelProvider.php`. Isinya warna sidebar, radius kartu, dan font.
 2. Halaman Dasbor kustom berupa Filament Page yang menggantikan widget `app/Filament/Widgets/RingkasanKepatuhan.php`.
