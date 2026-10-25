@@ -186,7 +186,7 @@ class InspectionResource extends Resource
             ->filters([
                 Tables\Filters\Filter::make('perlu_tinjauan')
                     ->label('Antre ditinjau')
-                    ->query(fn (Builder $q) => $q
+                    ->query(fn (Builder $query) => $query
                         ->where('status', 'final')
                         ->whereIn('gate_status', Asset::statusPerluTinjauan())
                         ->whereNull('ditinjau_pada')),
@@ -208,7 +208,7 @@ class InspectionResource extends Resource
                     ->relationship('user', 'name'),
                 Tables\Filters\Filter::make('durasi_singkat')
                     ->label('Durasi tak wajar')
-                    ->query(fn (Builder $q) => $q
+                    ->query(fn (Builder $query) => $query
                         ->whereNotNull('durasi_detik')
                         ->where('durasi_detik', '<', Inspection::DURASI_WAJAR_DETIK)),
             ])

@@ -31,19 +31,19 @@ class ListInspections extends ListRecords
             'antre' => Tab::make('Antre ditinjau')
                 ->badge(InspectionResource::antreanTinjauan()->count())
                 ->badgeColor('warning')
-                ->modifyQueryUsing(fn (Builder $q) => $q
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->where('status', 'final')
                     ->whereIn('gate_status', Asset::statusPerluTinjauan())
                     ->whereNull('ditinjau_pada')),
 
             'menyimpang' => Tab::make('Lokasi menyimpang')
-                ->modifyQueryUsing(fn (Builder $q) => $q
+                ->modifyQueryUsing(fn (Builder $query) => $query
                     ->whereIn('gate_status', Asset::statusPerluTinjauan())),
 
             'tidak_layak' => Tab::make('Tidak layak pakai')
                 ->badge(Inspection::where('kesimpulan', 'tidak_layak')->count())
                 ->badgeColor('danger')
-                ->modifyQueryUsing(fn (Builder $q) => $q->where('kesimpulan', 'tidak_layak')),
+                ->modifyQueryUsing(fn (Builder $query) => $query->where('kesimpulan', 'tidak_layak')),
 
             'semua' => Tab::make('Semua'),
         ];
