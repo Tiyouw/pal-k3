@@ -29,7 +29,7 @@ class RingkasanDasbor
     public function tinjauan(): Builder
     {
         return Inspection::query()->where('status', 'final')->whereHas('asset.assetType', fn (Builder $q) => $q->where('slug', 'apar'))
-            ->whereIn('gate_status', ['jauh', 'perlu_review', 'gps_lemah', 'tanpa_gps'])->whereNull('ditinjau_pada');
+            ->whereIn('gate_status', Asset::statusPerluTinjauan())->whereNull('ditinjau_pada');
     }
 
     public function belum(): Builder

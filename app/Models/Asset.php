@@ -25,16 +25,16 @@ class Asset extends Model
     /** Bagian 5.5: radius mengikuti jenis lokasi, bukan satu angka global. */
     public const RADIUS_PER_LOKASI = [
         'dalam_gedung' => 75,
-        'bengkel'      => 60,
+        'bengkel' => 60,
         'area_terbuka' => 30,
-        'kendaraan'    => null, // objek bergerak; gerbang GPS tidak diberlakukan
+        'kendaraan' => null, // objek bergerak; gerbang GPS tidak diberlakukan
     ];
 
     public const LABEL_LOKASI = [
         'dalam_gedung' => 'Dalam gedung bertingkat',
-        'bengkel'      => 'Bengkel atau gudang',
+        'bengkel' => 'Bengkel atau gudang',
         'area_terbuka' => 'Area terbuka',
-        'kendaraan'    => 'Kendaraan (bergerak)',
+        'kendaraan' => 'Kendaraan (bergerak)',
     ];
 
     protected $fillable = [
@@ -44,13 +44,13 @@ class Asset extends Model
     ];
 
     protected $casts = [
-        'attributes'     => 'array',
-        'lat'            => 'float',
-        'lng'            => 'float',
-        'radius_m'       => 'integer',
-        'tgl_expired'    => 'date',
+        'attributes' => 'array',
+        'lat' => 'float',
+        'lng' => 'float',
+        'radius_m' => 'integer',
+        'tgl_expired' => 'date',
         'terakhir_dicek' => 'date',
-        'aktif'          => 'boolean',
+        'aktif' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -63,7 +63,7 @@ class Asset extends Model
     /** Token acak, bukan nomor aset. Nomor aset bisa terbaca orang; token tidak bisa ditebak. */
     public static function buatToken(): string
     {
-        return 'PAL-K3-' . bin2hex(random_bytes(16));
+        return 'PAL-K3-'.bin2hex(random_bytes(16));
     }
 
     public function assetType(): BelongsTo
@@ -129,14 +129,14 @@ class Asset extends Model
     /** Keterangan jenis media dan kapasitas untuk ditampilkan di layar petugas. */
     public function labelMedia(): ?string
     {
-        $jenis     = $this->atribut('jenis');
+        $jenis = $this->atribut('jenis') ?: $this->atribut('tipe');
         $kapasitas = $this->atribut('kapasitas_kg');
 
         if (! $jenis && ! $kapasitas) {
             return null;
         }
 
-        return trim(($jenis ?: 'APAR') . ($kapasitas ? ' / ' . $kapasitas . ' kg' : ''));
+        return trim(($jenis ?: 'APAR').($kapasitas ? ' / '.$kapasitas.' kg' : ''));
     }
 
     public function labelLokasiTipe(): string
@@ -179,7 +179,7 @@ class Asset extends Model
     public function evaluasiGerbang(?float $lat, ?float $lng, ?int $accuracy): array
     {
         $radius = $this->radiusEfektif();
-        $jarak  = $this->jarakDari($lat, $lng);
+        $jarak = $this->jarakDari($lat, $lng);
 
         // Objek bergerak (mobil damkar): gerbang GPS memang tidak diberlakukan.
         if ($radius === null) {
@@ -207,15 +207,15 @@ class Asset extends Model
         $toleransi = $radius + (int) ($accuracy ?? 0);
 
         $status = match (true) {
-            $jarak <= $toleransi     => 'sesuai',
+            $jarak <= $toleransi => 'sesuai',
             $jarak <= $toleransi * 2 => 'perlu_review',
-            default                  => 'jauh',
+            default => 'jauh',
         };
 
         return [
-            'status'    => $status,
-            'jarak_m'   => $jarak,
-            'radius_m'  => $radius,
+            'status' => $status,
+            'jarak_m' => $jarak,
+            'radius_m' => $radius,
             'toleransi' => $toleransi,
         ];
     }
@@ -223,7 +223,7 @@ class Asset extends Model
     /** Status yang masuk antrean tinjauan admin (Bagian 8.2 /admin/penyimpangan). */
     public static function statusPerluTinjauan(): array
     {
-        return ['perlu_review', 'jauh'];
+        return ['perlu_review', 'jauh', 'gps_lemah', 'tanpa_gps'];
     }
 
     public function jatuhTempo(): bool
@@ -239,7 +239,7 @@ class Asset extends Model
 
     public function namaTampil(): string
     {
-        return trim($this->kode . ' - ' . Str::limit($this->lokasi_teks, 40));
+        return trim($this->kode.' - '.Str::limit($this->lokasi_teks, 40));
     }
 
     /**
@@ -265,7 +265,7 @@ class Asset extends Model
             return $lantai;
         }
 
-        return 'Lt. ' . $lantai;
+        return 'Lt. '.$lantai;
     }
 
     /**

@@ -2,15 +2,18 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Resources\InspectionResource;
 use App\Filament\Resources\InspectionResource\Pages\ListInspections;
 use App\Models\Asset;
 use App\Models\Inspection;
 use App\Models\User;
+use App\Services\RingkasanDasbor;
 use Database\Seeders\AparSeeder;
 use Database\Seeders\MasterSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class DaftarInspeksiTest extends TestCase
@@ -59,5 +62,35 @@ class DaftarInspeksiTest extends TestCase
         $this->inspeksi('01D', ['gate_status' => 'perlu_review']);
 
         $this->get('/admin/inspections')->assertOk();
+    }
+
+    #[DataProvider('statusTinjauan')]
+    public function test_tinjauan_panel_dan_dasbor_konsisten_dan_bisa_diselesaikan(string $status): void
+    {
+        $this->seed([MasterSeeder::class, AparSeeder::class]);
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+        $inspection = $this->inspeksi('01D', ['gate_status' => $status]);
+        $this->assertSame(1, InspectionResource::antreanTinjauan()->count());
+        $this->assertSame(1, app(RingkasanDasbor::class)->tinjauan()->count());
+
+        Livewire::test(ListInspections::class)->callTableAction('tinjau', $inspection, data: [
+            'catatan_review' => 'Lokasi diverifikasi melalui foto dan stiker.',
+        ])->assertHasNoTableActionErrors();
+
+        $this->assertSame($admin->id, $inspection->fresh()->ditinjau_oleh);
+        $this->assertSame(0, InspectionResource::antreanTinjauan()->count());
+        $this->assertSame(0, app(RingkasanDasbor::class)->tinjauan()->count());
+    }
+
+    public static function statusTinjauan(): array
+    {
+        return [
+            'di luar radius' => ['perlu_review'],
+            'jauh' => ['jauh'],
+            'GPS lemah' => ['gps_lemah'],
+            'tanpa GPS' => ['tanpa_gps'],
+        ];
     }
 }

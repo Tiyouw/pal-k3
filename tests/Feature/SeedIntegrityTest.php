@@ -161,7 +161,7 @@ class SeedIntegrityTest extends TestCase
         $satuTitik = Asset::whereIn('kode', ['01D', '09D', '17D'])->get();
 
         $this->assertCount(3, $satuTitik);
-        $this->assertCount(1, $satuTitik->map(fn ($a) => $a->lat . ',' . $a->lng)->unique());
+        $this->assertCount(1, $satuTitik->map(fn ($a) => $a->lat.','.$a->lng)->unique());
         $this->assertCount(3, $satuTitik->pluck('lantai')->unique());
     }
 
@@ -173,6 +173,12 @@ class SeedIntegrityTest extends TestCase
         $this->assertSame('Dry Powder', $aset->attributes['tipe']);
         // CSV lokal ID menulis "4,5"; harus jadi 4.5 bukan 45 atau 4.
         $this->assertSame(4.5, $aset->attributes['kapasitas_kg']);
+    }
+
+    #[Test]
+    public function label_media_menampilkan_jenis_dari_data_seed(): void
+    {
+        $this->assertSame('Dry Powder / 4.5 kg', Asset::where('kode', '01D')->firstOrFail()->labelMedia());
     }
 
     #[Test]

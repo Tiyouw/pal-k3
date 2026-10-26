@@ -65,7 +65,23 @@ gagal, jadi aman dipakai sebagai gerbang penyebaran.
 35 kode QR asli dan berkas JSON memuat token `PAL-K3-*` dalam bentuk teks.
 Menerbitkannya sama dengan menerbitkan kunci masuk setiap tabung.
 
-## Pantangan
+## Verifikasi demonstrasi
+
+`verifikasi_panel.py` memeriksa tampilan dan interaksi tanpa menulis inspeksi.
+`verifikasi_demo.py` melengkapi pemeriksaan itu dengan **membuat dua inspeksi
+contoh** melalui browser: APAR baik dan APAR dengan temuan berat. Skrip ini juga
+memeriksa URL foto publik, riwayat, menu admin, batas akses pemantau, dan ketiga
+jenis laporan PDF. Jalankan hanya pada data demonstrasi dengan `DEMO_MODE=true`.
+
+Masukan tambahannya: `QA_DEMO_WRITE=1`, `QA_ASSET_FILE` (JSON privat berisi
+`id`, `qr_token`, `lat`, `lng` satu aset contoh), dan `QA_PHOTO` (foto contoh
+yang jelas diberi label demonstrasi). `QA_TANGKAPAN` wajib menunjuk folder di
+luar repositori. Akun mengikuti tiga username demo di README utama.
+
+Untuk memakai Edge yang sudah terpasang di Windows, set `QA_CHROMIUM` ke
+`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`.
+
+## Batas pengujian
 
 - Jangan klik **Ganti token stiker QR** di panel. Tombol itu mematikan seluruh
   stiker fisik yang sudah tertempel di lapangan.

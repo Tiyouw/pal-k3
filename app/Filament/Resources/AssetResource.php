@@ -11,6 +11,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Data induk aset. Scaffold bawaan menampilkan relasi sebagai angka id, yang
@@ -90,7 +91,7 @@ class AssetResource extends Resource
                         ->label('Radius bawaan jenis ini')
                         ->content(function (Forms\Get $get): string {
                             $tipe = $get('lokasi_tipe');
-                            $r    = Asset::RADIUS_PER_LOKASI[$tipe] ?? null;
+                            $r = Asset::RADIUS_PER_LOKASI[$tipe] ?? null;
 
                             if ($tipe === null) {
                                 return 'Pilih jenis lokasi lebih dahulu.';
@@ -223,10 +224,10 @@ class AssetResource extends Resource
                 Tables\Filters\TernaryFilter::make('aktif')->label('Aktif'),
                 Tables\Filters\Filter::make('tanpa_titik')
                     ->label('Belum punya koordinat')
-                    ->query(fn ($q) => $q->whereNull('lat')->orWhereNull('lng')),
+                    ->query(fn (Builder $query) => $query->where(fn (Builder $coordinates) => $coordinates->whereNull('lat')->orWhereNull('lng'))),
                 Tables\Filters\Filter::make('jatuh_tempo')
                     ->label('Jatuh tempo inspeksi')
-                    ->query(fn ($q) => $q->where('aktif', true)->where(
+                    ->query(fn (Builder $query) => $query->where('aktif', true)->where(
                         fn ($s) => $s->whereNull('terakhir_dicek')
                             ->orWhereRaw("terakhir_dicek < date('now', '-30 day')")
                     )),
@@ -280,9 +281,9 @@ class AssetResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListAssets::route('/'),
+            'index' => Pages\ListAssets::route('/'),
             'create' => Pages\CreateAsset::route('/create'),
-            'edit'   => Pages\EditAsset::route('/{record}/edit'),
+            'edit' => Pages\EditAsset::route('/{record}/edit'),
         ];
     }
 }

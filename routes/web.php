@@ -49,7 +49,7 @@ Route::post('/keluar', [AuthController::class, 'keluar'])
 */
 
 Route::get('/i/{token}', [InspeksiController::class, 'mulai'])
-    ->middleware('auth')
+    ->middleware(['auth', 'inspektur'])
     ->name('petugas.inspeksi.mulai');
 
 /*

@@ -13,7 +13,7 @@ class Masuk extends Login
 
     protected function getEmailFormComponent(): Component
     {
-        return TextInput::make('nip')->label('NIP')->required()->maxLength(32)->autocomplete('username')->placeholder('Masukkan NIP Anda');
+        return TextInput::make('nip')->label(config('demo.enabled') ? 'NIP atau username' : 'NIP')->required()->maxLength(32)->autocomplete('username')->placeholder(config('demo.enabled') ? 'Contoh: admin' : 'Masukkan NIP Anda');
     }
 
     protected function getCredentialsFromFormData(array $data): array

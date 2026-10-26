@@ -7,11 +7,13 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Hash;
 
 #[Fillable(['name', 'nip', 'email', 'role', 'jabatan', 'division_id', 'aktif', 'password'])]
 #[Hidden(['password', 'remember_token'])]
@@ -21,8 +23,10 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, Notifiable;
 
     /** Tiga peran Bagian 3.3 rancangan. */
-    public const ROLE_ADMIN     = 'admin';     // komputer: data induk, laporan, tinjauan
-    public const ROLE_PEMANTAU  = 'pemantau';  // komputer: hanya papan pantau dan laporan
+    public const ROLE_ADMIN = 'admin';     // komputer: data induk, laporan, tinjauan
+
+    public const ROLE_PEMANTAU = 'pemantau';  // komputer: hanya papan pantau dan laporan
+
     public const ROLE_INSPEKTUR = 'inspektur'; // ponsel: pindai QR, isi checklist
 
     /**
@@ -35,8 +39,8 @@ class User extends Authenticatable implements FilamentUser
     public const ROLE_PANEL = [self::ROLE_ADMIN, self::ROLE_PEMANTAU];
 
     public const LABEL_ROLE = [
-        self::ROLE_ADMIN     => 'Administrator K3',
-        self::ROLE_PEMANTAU  => 'Pemantau',
+        self::ROLE_ADMIN => 'Administrator K3',
+        self::ROLE_PEMANTAU => 'Pemantau',
         self::ROLE_INSPEKTUR => 'Inspektur',
     ];
 
@@ -44,8 +48,8 @@ class User extends Authenticatable implements FilamentUser
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'aktif'             => 'boolean',
+            'password' => 'hashed',
+            'aktif' => 'boolean',
         ];
     }
 
@@ -63,6 +67,21 @@ class User extends Authenticatable implements FilamentUser
     public function inspections(): HasMany
     {
         return $this->hasMany(Inspection::class);
+    }
+
+    public function isDemoAccount(): bool
+    {
+        return (bool) config('demo.enabled')
+            && array_key_exists((string) ($this->attributes['nip'] ?? ''), config('demo.accounts', []));
+    }
+
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value): string => $this->isDemoAccount() || Hash::isHashed($value)
+                ? $value
+                : Hash::make($value),
+        );
     }
 
     /**

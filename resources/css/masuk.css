@@ -39,4 +39,12 @@
     .k3-login-form-content > .k3-login-eyebrow { font-size:9px; }
 }
 /* Layar sangat pendek (ponsel lanskap): ringkas panel cerita jadi hanya merek. */
+.k3-demo { margin:14px 0; padding:12px 14px; border:1px solid #cbdeda; border-radius:10px; background:#f1f7f5; color:#173f3a; font-size:13px; }
+.k3-demo > strong { display:flex; justify-content:space-between; align-items:baseline; gap:12px; margin-bottom:8px; }
+.k3-demo p { display:flex; justify-content:space-between; gap:16px; margin:6px 0; }
+.k3-demo code { font-size:13px; user-select:all; }
+.k3-demo small { font-size:11px; font-weight:400; color:#516b65; }
+.k3-login-shell:has(.k3-demo) .k3-login-form-content { padding-block:8px; }
+.k3-login-shell:has(.k3-demo) .k3-login-form-panel { padding-block:16px; }
+.k3-login-shell:has(.k3-demo) .k3-login-switch { margin-top:12px; padding-top:10px; }
 @media(max-height:520px) { .k3-login-message { display:none; }.k3-login-story { padding:16px 24px; } }

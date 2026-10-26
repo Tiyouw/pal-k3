@@ -23,7 +23,7 @@ class Schedule extends Model
     ];
 
     protected $casts = [
-        'periode'     => 'date',
+        'periode' => 'date',
         'jatuh_tempo' => 'date',
     ];
 
@@ -43,13 +43,15 @@ class Schedule extends Model
      */
     public static function pastikanAda(Asset $asset, ?Carbon $bulan = null): self
     {
-        $bulan   = ($bulan ?? now())->copy()->startOfMonth();
+        $bulan = ($bulan ?? now())->copy()->startOfMonth();
         $periode = $asset->assetType?->periode_hari ?? 30;
 
-        return static::firstOrCreate(
-            ['asset_id' => $asset->id, 'periode' => $bulan->toDateString()],
-            ['jatuh_tempo' => $bulan->copy()->addDays($periode - 1)->toDateString()],
-        );
+        return static::query()
+            ->whereDate('periode', $bulan->toDateString())
+            ->firstOrCreate(
+                ['asset_id' => $asset->id],
+                ['periode' => $bulan->toDateString(), 'jatuh_tempo' => $bulan->copy()->addDays($periode - 1)->toDateString()],
+            );
     }
 
     /** Dipanggil setelah inspeksi difinalkan. */
@@ -57,7 +59,7 @@ class Schedule extends Model
     {
         $this->update([
             'inspection_id' => $inspection->id,
-            'status'        => $inspection->inspected_at->gt($this->jatuh_tempo) ? 'telat' : 'selesai',
+            'status' => $inspection->inspected_at->gt($this->jatuh_tempo->copy()->endOfDay()) ? 'telat' : 'selesai',
         ]);
     }
 
@@ -65,8 +67,8 @@ class Schedule extends Model
     {
         return match ($this->status) {
             'selesai' => 'Terlaksana',
-            'telat'   => 'Terlaksana (telat)',
-            default   => $this->jatuh_tempo->isPast() ? 'Terlewat' : 'Belum',
+            'telat' => 'Terlaksana (telat)',
+            default => $this->jatuh_tempo->copy()->endOfDay()->isPast() ? 'Terlewat' : 'Belum',
         };
     }
 }

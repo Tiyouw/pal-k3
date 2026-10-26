@@ -108,6 +108,20 @@ def teks_hasil(pg):
     return loc.inner_text() if loc.count() else ""
 
 
+def cari(pg, teks):
+    """Tunggu respons pencarian yang benar, termasuk debounce dan render Livewire."""
+    def respons_pencarian(r):
+        if "/livewire/update" not in r.url or r.request.method != "POST":
+            return False
+        payload = r.request.post_data_json or {}
+        return any(c.get("updates", {}).get("search") == teks for c in payload.get("components", []))
+
+    with pg.expect_response(respons_pencarian, timeout=20000) as respons:
+        pg.fill("input[type=search]", teks)
+    respons.value.body()
+    pg.wait_for_load_state("networkidle")
+
+
 def uji_login(b):
     js = """() => { const c = document.querySelector('.k3-login-shell').getBoundingClientRect(), de = document.documentElement;
       const tinggi = Math.max(de.scrollHeight, document.body.scrollHeight);
@@ -206,7 +220,7 @@ def uji_admin(b):
 
     pg.keyboard.press("Control+k"); pg.wait_for_timeout(300)
     cek("Ctrl+K memfokuskan kolom cari", pg.evaluate("() => !!document.activeElement && document.activeElement.type === 'search'"))
-    pg.keyboard.type("01D"); pg.wait_for_timeout(1200)
+    cari(pg, "01D")
     t = teks_hasil(pg)
     cek('cari "01D": ada hasil Aset', "ASET" in t.upper() and "01D" in t, t[:160])
     cek("hasil pencarian tidak memuat token QR", "PAL-K3-" not in t)
@@ -214,12 +228,12 @@ def uji_admin(b):
     pg.keyboard.press("ArrowDown")
     cek("ArrowDown memindahkan fokus ke hasil", pg.evaluate("() => document.activeElement.classList.contains('fi-global-search-result-link')"))
     pg.keyboard.press("Escape")
-    pg.fill("input[type=search]", "%%"); pg.wait_for_timeout(1200)
+    cari(pg, "%%")
     t = teks_hasil(pg)
     cek('cari "%%": wildcard tidak berlaku', "ASET" not in t.upper() and "INSPEKSI" not in t.upper(), t[:120])
-    pg.fill("input[type=search]", "PAL-K3"); pg.wait_for_timeout(1200)
+    cari(pg, "PAL-K3")
     cek("cari awalan token QR: tidak menemukan aset", "ASET" not in teks_hasil(pg).upper())
-    pg.fill("input[type=search]", "stiker"); pg.wait_for_timeout(1200)
+    cari(pg, "stiker")
     t = teks_hasil(pg).upper()
     cek('cari "stiker": ada Halaman dan Tindakan untuk admin', "HALAMAN" in t and "TINDAKAN" in t, t[:160])
     cek("admin: tanpa galat JS", not galat, galat)
@@ -255,10 +269,10 @@ def uji_pemantau(b):
     cek("pemantau: tanpa grup Data Induk", "DATA INDUK" not in pg.locator(".fi-sidebar").inner_text().upper())
     cek("pemantau: sidebar ikon pada kunjungan pertama", lebar_sidebar(pg) <= 80)
     tangkap(pg, "pemantau-1440.png", full_page=True)
-    pg.keyboard.press("Control+k"); pg.keyboard.type("stiker"); pg.wait_for_timeout(1200)
+    pg.keyboard.press("Control+k"); cari(pg, "stiker")
     t = teks_hasil(pg).upper()
     cek("pemantau: pencarian tanpa Tindakan dan Aset", "TINDAKAN" not in t and "ASET" not in t, t[:160])
-    pg.fill("input[type=search]", "01D"); pg.wait_for_timeout(1200)
+    cari(pg, "01D")
     cek("pemantau: aset (Data Induk) tidak muncul di hasil", "ASET" not in teks_hasil(pg).upper())
     pg.keyboard.press("Escape")
     pg.set_viewport_size({"width": 390, "height": 844})

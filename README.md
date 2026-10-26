@@ -64,14 +64,36 @@ Repositori ini **tidak memuat data asli** siapa pun:
   bukan nama pegawai.
 - Titik koordinat pada data contoh berada di wilayah Jember dan dipakai untuk
   uji coba lapangan. Titik itu bukan tata letak fasilitas industri mana pun.
-- Kode QR dan kata sandi **tidak disimpan** di dalam repositori. Keduanya
+- Kode QR dan kata sandi akun NIP **tidak disimpan** di dalam repositori. Keduanya
   diterbitkan acak saat aplikasi dipasang. Alasannya, kode QR adalah satu-satunya
   penentu keaslian pemeriksaan; kalau kodenya bisa dibaca dari repositori,
-  pemeriksaan bisa dipalsukan tanpa datang ke lokasi.
+  pemeriksaan bisa dipalsukan tanpa datang ke lokasi. Akun demonstrasi yang
+  diaktifkan secara terpisah dijelaskan di bawah.
 
 ---
 
 ## Untuk yang ingin menjalankan sendiri
+
+### Demo stakeholder
+
+Aktifkan `DEMO_MODE=true` di `.env`, lalu jalankan
+`php artisan db:seed --class=DemoUserSeeder`. Akun berikut disediakan khusus
+untuk demonstrasi dengan data contoh:
+
+| Username | Kata sandi | Halaman masuk |
+| --- | --- | --- |
+| `admin` | `admin123` | `/admin/login` atau `/masuk` |
+| `pemantau` | `pemantau123` | `/admin/login` atau `/masuk` |
+| `inspektur` | `inspektur123` | `/masuk` |
+
+Sesuai kebutuhan demonstrasi, kata sandi ketiga akun ini disimpan apa adanya
+selama mode demo aktif. Akun bernomor NIP tetap memakai mekanisme sandi normal.
+Halaman masuk menampilkan kredensial demo hanya saat `DEMO_MODE=true`.
+Menonaktifkan mode demo menolak login dengan sandi demo yang belum di-hash.
+Seeder demo dapat dijalankan ulang untuk mengembalikan ketiga akun ke kondisi awal,
+tanpa mengganti akun NIP, data inspeksi, atau token QR yang sudah ada.
+
+### Pemasangan
 
 Butuh PHP 8.3, Composer, dan Node.js.
 

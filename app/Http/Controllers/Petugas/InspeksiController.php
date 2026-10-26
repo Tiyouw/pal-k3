@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Petugas;
 
 use App\Http\Controllers\Controller;
 use App\Models\Asset;
+use App\Models\ChecklistItem;
 use App\Models\Inspection;
 use App\Models\Schedule;
 use App\Services\IssueGenerator;
@@ -11,6 +12,7 @@ use App\Services\PhotoStore;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -60,7 +62,7 @@ class InspeksiController extends Controller
             return view('petugas.gagal', [
                 'judul' => 'Stiker tidak dikenali',
                 'pesan' => 'Kode pada stiker ini tidak terdaftar. Kemungkinan stiker sudah diganti '
-                    . 'atau aset dinonaktifkan. Laporkan ke Admin K3 dengan menyebut lokasi tabung.',
+                    .'atau aset dinonaktifkan. Laporkan ke Admin K3 dengan menyebut lokasi tabung.',
             ]);
         }
 
@@ -82,13 +84,13 @@ class InspeksiController extends Controller
         $inspeksi = Inspection::firstOrCreate(
             [
                 'asset_id' => $asset->id,
-                'user_id'  => Auth::id(),
-                'status'   => 'draf',
+                'user_id' => Auth::id(),
+                'status' => 'draf',
             ],
             [
-                'mulai_pada'  => now(),
+                'mulai_pada' => now(),
                 'qr_verified' => true,
-                'ua'          => substr((string) $request->userAgent(), 0, 255),
+                'ua' => substr((string) $request->userAgent(), 0, 255),
             ],
         );
 
@@ -113,11 +115,11 @@ class InspeksiController extends Controller
             ->get();
 
         return view('petugas.isi', [
-            'inspeksi'  => $inspeksi,
-            'asset'     => $inspeksi->asset,
-            'groups'    => $groups,
-            'jawaban'   => $inspeksi->answers->keyBy('checklist_item_id'),
-            'usulan'    => $this->issues->usulKesimpulan($inspeksi),
+            'inspeksi' => $inspeksi,
+            'asset' => $inspeksi->asset,
+            'groups' => $groups,
+            'jawaban' => $inspeksi->answers->keyBy('checklist_item_id'),
+            'usulan' => $this->issues->usulKesimpulan($inspeksi),
         ]);
     }
 
@@ -133,9 +135,13 @@ class InspeksiController extends Controller
     {
         $this->pastikanMilikSendiri($inspeksi);
 
+        if ($inspeksi->status === 'final') {
+            return response()->json(['pesan' => 'Inspeksi sudah dikirim.'], 422);
+        }
+
         $data = $request->validate([
-            'lat'      => ['required', 'numeric', 'between:-90,90'],
-            'lng'      => ['required', 'numeric', 'between:-180,180'],
+            'lat' => ['required', 'numeric', 'between:-90,90'],
+            'lng' => ['required', 'numeric', 'between:-180,180'],
             'accuracy' => ['nullable', 'numeric', 'min:0', 'max:100000'],
         ]);
 
@@ -148,19 +154,19 @@ class InspeksiController extends Controller
         );
 
         $inspeksi->update([
-            'gps_lat'      => $data['lat'],
-            'gps_lng'      => $data['lng'],
+            'gps_lat' => $data['lat'],
+            'gps_lng' => $data['lng'],
             'gps_accuracy' => isset($data['accuracy']) ? (int) round($data['accuracy']) : null,
-            'jarak_m'      => $gerbang['jarak_m'],
-            'gate_status'  => $gerbang['status'],
+            'jarak_m' => $gerbang['jarak_m'],
+            'gate_status' => $gerbang['status'],
         ]);
 
         return response()->json([
-            'status'  => $gerbang['status'],
-            'label'   => $inspeksi->fresh()->labelGerbang(),
+            'status' => $gerbang['status'],
+            'label' => $inspeksi->fresh()->labelGerbang(),
             'jarak_m' => $gerbang['jarak_m'],
-            'radius_m'=> $gerbang['radius_m'],
-            'pesan'   => $this->pesanGerbang($gerbang['status'], $gerbang['jarak_m'], $gerbang['radius_m']),
+            'radius_m' => $gerbang['radius_m'],
+            'pesan' => $this->pesanGerbang($gerbang['status'], $gerbang['jarak_m'], $gerbang['radius_m']),
         ]);
     }
 
@@ -183,17 +189,33 @@ class InspeksiController extends Controller
 
         $data = $request->validate([
             'checklist_item_id' => ['required', 'integer', Rule::in($idItemSah)],
-            'nilai'             => ['nullable', 'string', 'max:120'],
-            'nilai_angka'       => ['nullable', 'numeric', 'min:0', 'max:100000'],
-            'catatan'           => ['nullable', 'string', 'max:500'],
+            'nilai' => ['nullable', 'string', 'max:120'],
+            'nilai_angka' => ['nullable', 'numeric', 'min:0', 'max:100000'],
+            'catatan' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $item = ChecklistItem::findOrFail($data['checklist_item_id']);
+        $aturanNilai = ['nullable', 'string', 'max:120'];
+
+        if ($item->isDuaNilai()) {
+            $aturanNilai[] = Rule::in(['ok', 'tidak']);
+        } elseif ($item->answer_type === 'select') {
+            $aturanNilai[] = Rule::in($item->daftarPilihan());
+        } elseif ($item->answer_type === 'date') {
+            $aturanNilai[] = 'date';
+        }
+
+        $request->validate([
+            'nilai' => $item->answer_type === 'number' ? ['prohibited'] : $aturanNilai,
+            'nilai_angka' => $item->answer_type === 'number' ? ['nullable', 'numeric', 'min:0', 'max:100000'] : ['prohibited'],
         ]);
 
         $jawaban = $inspeksi->answers()->updateOrCreate(
             ['checklist_item_id' => $data['checklist_item_id']],
             [
-                'nilai'       => $data['nilai'] ?? null,
+                'nilai' => $data['nilai'] ?? null,
                 'nilai_angka' => $data['nilai_angka'] ?? null,
-                'catatan'     => $data['catatan'] ?? null,
+                'catatan' => $data['catatan'] ?? null,
             ],
         );
 
@@ -202,11 +224,11 @@ class InspeksiController extends Controller
 
         return response()->json([
             'tersimpan' => true,
-            'temuan'    => $jawaban->isTemuan(),
-            'severity'  => $jawaban->severity(),
-            'terisi'    => $inspeksi->answers->filter(fn ($a) => $a->nilai !== null || $a->nilai_angka !== null)->count(),
-            'total'     => count($idItemSah),
-            'usulan'    => $this->issues->usulKesimpulan($inspeksi),
+            'temuan' => $jawaban->isTemuan(),
+            'severity' => $jawaban->severity(),
+            'terisi' => $inspeksi->answers->filter(fn ($a) => $a->nilai !== null || $a->nilai_angka !== null)->count(),
+            'total' => count($idItemSah),
+            'usulan' => $this->issues->usulKesimpulan($inspeksi),
         ]);
     }
 
@@ -232,8 +254,8 @@ class InspeksiController extends Controller
         }
 
         return response()->json([
-            'id'     => $foto->id,
-            'url'    => $foto->url(),
+            'id' => $foto->id,
+            'url' => $foto->url(),
             'jumlah' => $inspeksi->photos()->count(),
         ]);
     }
@@ -241,6 +263,10 @@ class InspeksiController extends Controller
     public function hapusFoto(Inspection $inspeksi, int $foto): JsonResponse
     {
         $this->pastikanMilikSendiri($inspeksi);
+
+        if ($inspeksi->status === 'final') {
+            return response()->json(['pesan' => 'Inspeksi sudah dikirim.'], 422);
+        }
 
         $berkas = $inspeksi->photos()->findOrFail($foto);
         $this->photos->hapus($berkas);
@@ -267,12 +293,12 @@ class InspeksiController extends Controller
         $inspeksi->load(['answers.item', 'asset.assetType']);
 
         $data = $request->validate([
-            'kesimpulan'  => ['required', Rule::in(array_keys(Inspection::KESIMPULAN))],
-            'catatan'     => ['nullable', 'string', 'max:1000'],
+            'kesimpulan' => ['required', Rule::in(array_keys(Inspection::KESIMPULAN))],
+            'catatan' => ['nullable', 'string', 'max:1000'],
             'rekomendasi' => ['nullable', 'string', 'max:1000'],
             'device_time' => ['nullable', 'date'],
         ], [], [
-            'kesimpulan'  => 'kesimpulan',
+            'kesimpulan' => 'kesimpulan',
             'rekomendasi' => 'rekomendasi',
         ]);
 
@@ -282,7 +308,7 @@ class InspeksiController extends Controller
         if ($belum->isNotEmpty()) {
             return back()
                 ->withInput()
-                ->withErrors(['kesimpulan' => 'Masih ada pemeriksaan yang belum diisi: ' . $belum->implode(', ')]);
+                ->withErrors(['kesimpulan' => 'Masih ada pemeriksaan yang belum diisi: '.$belum->implode(', ')]);
         }
 
         // Bagian 3.2: foto wajib, minimal satu. Tanpa foto, laporan inspeksi
@@ -314,15 +340,15 @@ class InspeksiController extends Controller
             $sekarang = now();
 
             $inspeksi->update([
-                'status'       => 'final',
+                'status' => 'final',
                 'inspected_at' => $sekarang,
                 'durasi_detik' => $inspeksi->mulai_pada
                     ? max($inspeksi->mulai_pada->diffInSeconds($sekarang), 0)
                     : null,
-                'device_time'  => $data['device_time'] ?? null,
-                'kesimpulan'   => $data['kesimpulan'],
-                'catatan'      => $data['catatan'] ?? null,
-                'rekomendasi'  => $data['rekomendasi'] ?? null,
+                'device_time' => $data['device_time'] ?? null,
+                'kesimpulan' => $data['kesimpulan'],
+                'catatan' => $data['catatan'] ?? null,
+                'rekomendasi' => $data['rekomendasi'] ?? null,
             ]);
 
             $this->issues->bangun($inspeksi);
@@ -346,8 +372,8 @@ class InspeksiController extends Controller
 
         return view('petugas.selesai', [
             'inspeksi' => $inspeksi,
-            'asset'    => $inspeksi->asset,
-            'temuan'   => $inspeksi->issues->sortBy(fn ($i) => ['berat' => 0, 'sedang' => 1, 'ringan' => 2][$i->severity] ?? 3),
+            'asset' => $inspeksi->asset,
+            'temuan' => $inspeksi->issues->sortBy(fn ($i) => ['berat' => 0, 'sedang' => 1, 'ringan' => 2][$i->severity] ?? 3),
         ]);
     }
 
@@ -371,7 +397,7 @@ class InspeksiController extends Controller
     }
 
     /** Label item wajib yang belum punya jawaban. */
-    private function itemWajibBelumTerisi(Inspection $inspeksi): \Illuminate\Support\Collection
+    private function itemWajibBelumTerisi(Inspection $inspeksi): Collection
     {
         $terisi = $inspeksi->answers
             ->filter(fn ($a) => $a->nilai !== null || $a->nilai_angka !== null)
@@ -391,12 +417,12 @@ class InspeksiController extends Controller
     private function pesanGerbang(string $status, ?int $jarak, ?int $radius): string
     {
         return match ($status) {
-            'sesuai'        => 'Lokasi sesuai.',
-            'perlu_review'  => "Anda berjarak {$jarak} m dari titik aset (batas {$radius} m). Inspeksi tetap dapat dikirim dan akan ditinjau Admin K3.",
-            'jauh'          => "Anda berjarak {$jarak} m dari titik aset, jauh di luar batas {$radius} m. Pastikan stiker yang dipindai benar.",
-            'gps_lemah'     => 'Sinyal GPS lemah, posisi tidak dapat dipastikan. Ini tidak dihitung sebagai pelanggaran.',
+            'sesuai' => 'Lokasi sesuai.',
+            'perlu_review' => "Anda berjarak {$jarak} m dari titik aset (batas {$radius} m). Inspeksi tetap dapat dikirim dan akan ditinjau Admin K3.",
+            'jauh' => "Anda berjarak {$jarak} m dari titik aset, jauh di luar batas {$radius} m. Pastikan stiker yang dipindai benar.",
+            'gps_lemah' => 'Sinyal GPS lemah, posisi tidak dapat dipastikan. Ini tidak dihitung sebagai pelanggaran.',
             'tidak_berlaku' => 'Objek bergerak, pemeriksaan lokasi tidak diberlakukan.',
-            default         => 'Lokasi tidak terdeteksi. Inspeksi tetap dapat dikirim.',
+            default => 'Lokasi tidak terdeteksi. Inspeksi tetap dapat dikirim.',
         };
     }
 

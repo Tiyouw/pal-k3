@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             MasterSeeder::class,
             UserSeeder::class,
             AparSeeder::class,
+            DemoUserSeeder::class,
         ]);
     }
 }

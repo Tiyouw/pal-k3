@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Auth\DemoUserProvider;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Auth::provider('demo-aware', fn ($app, array $config): DemoUserProvider => new DemoUserProvider($app['hash'], $config['model']));
+
         /*
          * Locale Carbon disetel eksplisit karena APP_LOCALE saja tidak
          * memindahkannya. Tanpa ini translatedFormat('F Y') yang dipakai di dua
